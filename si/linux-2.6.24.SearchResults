@@ -1,0 +1,53 @@
+---- early_node_map Matches (53 in 1 files) ----
+Page_alloc.c (mm):  static struct node_active_region __meminitdata early_node_map[MAX_ACTIVE_REGIONS];
+Page_alloc.c (mm):		if (nid == MAX_NUMNODES || early_node_map[i].nid == nid)
+Page_alloc.c (mm):		if (nid == MAX_NUMNODES || early_node_map[index].nid == nid)
+Page_alloc.c (mm):		unsigned long start_pfn = early_node_map[i].start_pfn;
+Page_alloc.c (mm):		unsigned long end_pfn = early_node_map[i].end_pfn;
+Page_alloc.c (mm):			return early_node_map[i].nid;
+Page_alloc.c (mm):/* Basic iterator support to walk early_node_map[] */
+Page_alloc.c (mm):		unsigned long end_pfn = early_node_map[i].end_pfn;
+Page_alloc.c (mm):		if (early_node_map[i].start_pfn >= max_low_pfn)
+Page_alloc.c (mm):		size_pages = end_pfn - early_node_map[i].start_pfn;
+Page_alloc.c (mm):		free_bootmem_node(NODE_DATA(early_node_map[i].nid),
+Page_alloc.c (mm):				PFN_PHYS(early_node_map[i].start_pfn),
+Page_alloc.c (mm):		memory_present(early_node_map[i].nid,
+Page_alloc.c (mm):				early_node_map[i].start_pfn,
+Page_alloc.c (mm):				early_node_map[i].end_pfn);
+Page_alloc.c (mm):		*start_pfn = min(*start_pfn, early_node_map[i].start_pfn);
+Page_alloc.c (mm):		*end_pfn = max(*end_pfn, early_node_map[i].end_pfn);
+Page_alloc.c (mm):	prev_end_pfn = min(early_node_map[i].start_pfn, range_end_pfn);
+Page_alloc.c (mm):	if (early_node_map[i].start_pfn > range_start_pfn)
+Page_alloc.c (mm):		start_pfn = min(early_node_map[i].start_pfn, range_end_pfn);
+Page_alloc.c (mm):		prev_end_pfn = early_node_map[i].end_pfn;
+Page_alloc.c (mm): * These ranges are stored in an early_node_map[] and later used by
+Page_alloc.c (mm):		if (early_node_map[i].nid != nid)
+Page_alloc.c (mm):		if (start_pfn >= early_node_map[i].start_pfn &&
+Page_alloc.c (mm):				end_pfn <= early_node_map[i].end_pfn)
+Page_alloc.c (mm):		if (start_pfn <= early_node_map[i].end_pfn &&
+Page_alloc.c (mm):				end_pfn > early_node_map[i].end_pfn) {
+Page_alloc.c (mm):			early_node_map[i].end_pfn = end_pfn;
+Page_alloc.c (mm):		if (start_pfn < early_node_map[i].end_pfn &&
+Page_alloc.c (mm):				end_pfn >= early_node_map[i].start_pfn) {
+Page_alloc.c (mm):			early_node_map[i].start_pfn = start_pfn;
+Page_alloc.c (mm):	/* Check that early_node_map is large enough */
+Page_alloc.c (mm):	early_node_map[i].nid = nid;
+Page_alloc.c (mm):	early_node_map[i].start_pfn = start_pfn;
+Page_alloc.c (mm):	early_node_map[i].end_pfn = end_pfn;
+Page_alloc.c (mm):		if (early_node_map[i].end_pfn == old_end_pfn) {
+Page_alloc.c (mm):			early_node_map[i].end_pfn = new_end_pfn;
+Page_alloc.c (mm):	memset(early_node_map, 0, sizeof(early_node_map));
+Page_alloc.c (mm):	sort(early_node_map, (size_t)nr_nodemap_entries,
+Page_alloc.c (mm):		min_pfn = min(min_pfn, early_node_map[i].start_pfn);
+Page_alloc.c (mm):		max_pfn = max(max_pfn, early_node_map[i].end_pfn);
+Page_alloc.c (mm):		unsigned long pages = early_node_map[i].end_pfn -
+Page_alloc.c (mm):						early_node_map[i].start_pfn;
+Page_alloc.c (mm):			node_set_state(early_node_map[i].nid, N_HIGH_MEMORY);
+Page_alloc.c (mm):			start_pfn = max(early_node_map[i].start_pfn,
+Page_alloc.c (mm):			end_pfn = early_node_map[i].end_pfn;
+Page_alloc.c (mm):	/* Sort early_node_map as initialisation assumes it is sorted */
+Page_alloc.c (mm):	/* Print out the early_node_map[] */
+Page_alloc.c (mm):	printk("early_node_map[%d] active PFN ranges\n", nr_nodemap_entries);
+Page_alloc.c (mm):		printk("  %3d: %8lu -> %8lu\n", early_node_map[i].nid,
+Page_alloc.c (mm):						early_node_map[i].start_pfn,
+Page_alloc.c (mm):						early_node_map[i].end_pfn);
