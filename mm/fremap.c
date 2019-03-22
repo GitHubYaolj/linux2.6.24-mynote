@@ -62,9 +62,9 @@ static int install_file_pte(struct mm_struct *mm, struct vm_area_struct *vma,
 		goto out;
 
 	if (!pte_none(*pte))
-		zap_pte(mm, vma, addr, pte);
+		zap_pte(mm, vma, addr, pte);//删除一个页表项
 
-	set_pte_at(mm, addr, pte, pgoff_to_pte(pgoff));
+	set_pte_at(mm, addr, pte, pgoff_to_pte(pgoff)/*构建一个新项*/);
 	/*
 	 * We don't need to run update_mmu_cache() here because the "file pte"
 	 * being installed by install_file_pte() is not a real pte - it's a
@@ -84,7 +84,7 @@ static int populate_range(struct mm_struct *mm, struct vm_area_struct *vma,
 	int err;
 
 	do {
-		err = install_file_pte(mm, vma, addr, pgoff, vma->vm_page_prot);
+		err = install_file_pte(mm, vma, addr, pgoff, vma->vm_page_prot);//设置新页表项
 		if (err)
 			return err;
 
@@ -169,7 +169,7 @@ asmlinkage long sys_remap_file_pages(unsigned long start, unsigned long size,
 		goto out;
 
 	/* Must set VM_NONLINEAR before any pages are populated. */
-	if (!(vma->vm_flags & VM_NONLINEAR)) {
+	if (!(vma->vm_flags & VM_NONLINEAR)) {//目标区域此前没进行过非线性映射，这时的vm_flags不会有VM_NONLINEAR标志
 		/* Don't need a nonlinear mapping, exit success */
 		if (pgoff == linear_page_index(vma, start)) {
 			err = 0;
@@ -205,19 +205,19 @@ asmlinkage long sys_remap_file_pages(unsigned long start, unsigned long size,
 		spin_lock(&mapping->i_mmap_lock);
 		flush_dcache_mmap_lock(mapping);
 		vma->vm_flags |= VM_NONLINEAR;
-		vma_prio_tree_remove(vma, &mapping->i_mmap);
-		vma_nonlinear_insert(vma, &mapping->i_mmap_nonlinear);
+		vma_prio_tree_remove(vma, &mapping->i_mmap);//从优先树移除线性映射
+		vma_nonlinear_insert(vma, &mapping->i_mmap_nonlinear);//将其插入到非线性映射的列表当中
 		flush_dcache_mmap_unlock(mapping);
 		spin_unlock(&mapping->i_mmap_lock);
 	}
 
-	err = populate_range(mm, vma, start, size, pgoff);
+	err = populate_range(mm, vma, start, size, pgoff);//设置修改过的页表项
 	if (!err && !(flags & MAP_NONBLOCK)) {
 		if (unlikely(has_write_lock)) {
 			downgrade_write(&mm->mmap_sem);
 			has_write_lock = 0;
 		}
-		make_pages_present(start, start+size);
+		make_pages_present(start, start+size);//对映射中的每一页都触发缺页异常，从底层块设备读入
 	}
 
 	/*

@@ -1551,7 +1551,8 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	int reuse = 0, ret = 0;
 	int page_mkwrite = 0;
 	struct page *dirty_page = NULL;
-
+    //1、父子进程共享页将正常返回页描述符
+    //2、malloc后，读取时获得的是zero_pfn零页，再写时，这里返回NULL
 	old_page = vm_normal_page(vma, address, orig_pte);
 	if (!old_page)
 		goto gotten;
@@ -1562,11 +1563,11 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	 */
 	if (PageAnon(old_page)) {
 		if (!TestSetPageLocked(old_page)) {
-			reuse = can_share_swap_page(old_page);
+			reuse = can_share_swap_page(old_page);//如果page->_mapcount==0,说明只有一个进程使用该页，不需要COW, reuse=1
 			unlock_page(old_page);
 		}
 	} else if (unlikely((vma->vm_flags & (VM_WRITE|VM_SHARED)) ==
-					(VM_WRITE|VM_SHARED))) {
+					(VM_WRITE|VM_SHARED))) { //vma共享且可写
 		/*
 		 * Only catch write-faults on shared writable pages,
 		 * read-only shared pages can get COWed by
@@ -1609,7 +1610,7 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	if (reuse) {
 		flush_cache_page(vma, address, pte_pfn(orig_pte));
 		entry = pte_mkyoung(orig_pte);
-		entry = maybe_mkwrite(pte_mkdirty(entry), vma);
+		entry = maybe_mkwrite(pte_mkdirty(entry), vma);//pte加入 脏且可写 属性
 		if (ptep_set_access_flags(vma, address, page_table, entry,1))
 			update_mmu_cache(vma, address, entry);
 		ret |= VM_FAULT_WRITE;
@@ -1619,25 +1620,25 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	/*
 	 * Ok, we need to copy. Oh, well..
 	 */
-	page_cache_get(old_page);
+	page_cache_get(old_page);//增加page->_count
 gotten:
 	pte_unmap_unlock(page_table, ptl);
 
-	if (unlikely(anon_vma_prepare(vma)))
+	if (unlikely(anon_vma_prepare(vma)))//准备逆向映射机制的数据结构
 		goto oom;
 	VM_BUG_ON(old_page == ZERO_PAGE(0));
-	new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma, address);
+	new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma, address);//分配一个新页
 	if (!new_page)
 		goto oom;
-	cow_user_page(new_page, old_page, address, vma);
+	cow_user_page(new_page, old_page, address, vma);//将异常页的数据复制到新页
 
 	/*
 	 * Re-check the pte - we dropped the lock
 	 */
-	page_table = pte_offset_map_lock(mm, pmd, address, &ptl);
+	page_table = pte_offset_map_lock(mm, pmd, address, &ptl);// 下面类似之前分析的do_anonymous_page
 	if (likely(pte_same(*page_table, orig_pte))) {
 		if (old_page) {
-			page_remove_rmap(old_page, vma);
+			page_remove_rmap(old_page, vma);//删除原来的只读页的逆向映射
 			if (!PageAnon(old_page)) {
 				dec_mm_counter(mm, file_rss);
 				inc_mm_counter(mm, anon_rss);
@@ -2160,25 +2161,25 @@ static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	/* Allocate our own private page. */
 	pte_unmap(page_table);
 
-	if (unlikely(anon_vma_prepare(vma)))
+	if (unlikely(anon_vma_prepare(vma)))//分配一个anon_vma实例，反向映射相关
 		goto oom;
-	page = alloc_zeroed_user_highpage_movable(vma, address);
+	page = alloc_zeroed_user_highpage_movable(vma, address);//调用alloc_page分配页，页被0填充
 	if (!page)
 		goto oom;
 
-	entry = mk_pte(page, vma->vm_page_prot);
-	entry = maybe_mkwrite(pte_mkdirty(entry), vma);
+	entry = mk_pte(page, vma->vm_page_prot);//把该页的物理地址加属性的值 赋给entry, 这是pte的基础值
+	entry = maybe_mkwrite(pte_mkdirty(entry), vma);//该vma区域可写，那么pte属性里加入 脏且可写 属性
 
-	page_table = pte_offset_map_lock(mm, pmd, address, &ptl);
+	page_table = pte_offset_map_lock(mm, pmd, address, &ptl);//addr对应的pte地址， 赋值用
 	if (!pte_none(*page_table))
 		goto release;
 	inc_mm_counter(mm, anon_rss);
 	lru_cache_add_active(page);
 	page_add_new_anon_rmap(page, vma, address);
-	set_pte_at(mm, address, page_table, entry);
+	set_pte_at(mm, address, page_table, entry);//向page_table写入entry，即pte赋值
 
 	/* No need to invalidate - it was non-present before */
-	update_mmu_cache(vma, address, entry);
+	update_mmu_cache(vma, address, entry);//更新 M M U
 unlock:
 	pte_unmap_unlock(page_table, ptl);
 	return 0;
@@ -2252,7 +2253,7 @@ static int __do_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	 */
 	page = vmf.page;
 	if (flags & FAULT_FLAG_WRITE) {
-		if (!(vma->vm_flags & VM_SHARED)) {
+		if (!(vma->vm_flags & VM_SHARED)) {//对私有页的写访问
 			anon = 1;
 			if (unlikely(anon_vma_prepare(vma))) {
 				ret = VM_FAULT_OOM;
@@ -2472,12 +2473,12 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	spinlock_t *ptl;
 
 	entry = *pte;
-	if (!pte_present(entry)) {
-		if (pte_none(entry)) {
+	if (!pte_present(entry)) {//页不在物理内存中  (_PAGE_PRESENT | _PAGE_PROTNONE)  -------请求调页
+		if (pte_none(entry)) {//没有对应的页表项,pte尚未写入任何物理地址，即还根本没有分配物理页
 			if (vma->vm_ops) {
 				if (vma->vm_ops->fault || vma->vm_ops->nopage)
 					return do_linear_fault(mm, vma, address,
-						pte, pmd, write_access, entry);
+						pte, pmd, write_access, entry);//按需分配(匿名映射)
 				if (unlikely(vma->vm_ops->nopfn))
 					return do_no_pfn(mm, vma, address, pte,
 							 pmd, write_access);
@@ -2485,11 +2486,11 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 			return do_anonymous_page(mm, vma, address,
 						 pte, pmd, write_access);
 		}
-		if (pte_file(entry))
+		if (pte_file(entry))//检查页表项是否属于非线性映射 _PAGE_FILE
 			return do_nonlinear_fault(mm, vma, address,
 					pte, pmd, write_access, entry);
 		return do_swap_page(mm, vma, address,
-					pte, pmd, write_access, entry);
+					pte, pmd, write_access, entry);//页不在物理内存中，页表中保存了相关的信息，意味着该页被换出，需从交换区换入
 	}
 
 	ptl = pte_lockptr(mm, pmd);
@@ -2497,9 +2498,9 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	if (unlikely(!pte_same(*pte, entry)))
 		goto unlock;
 	if (write_access) {
-		if (!pte_write(entry))
+		if (!pte_write(entry))//pte不允许写 ,未置位_PAGE_RW ------------ COW   pte映射的页在内存中，但页不可写
 			return do_wp_page(mm, vma, address,
-					pte, pmd, ptl, entry);
+					pte, pmd, ptl, entry);// COW 写时复制
 		entry = pte_mkdirty(entry);
 	}
 	entry = pte_mkyoung(entry);
@@ -2538,7 +2539,7 @@ int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	if (unlikely(is_vm_hugetlb_page(vma)))
 		return hugetlb_fault(mm, vma, address, write_access);
 
-	pgd = pgd_offset(mm, address);
+	pgd = pgd_offset(mm, address);//addr对应的一级页表条目
 	pud = pud_alloc(mm, pgd, address);
 	if (!pud)
 		return VM_FAULT_OOM;
@@ -2549,7 +2550,7 @@ int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	if (!pte)
 		return VM_FAULT_OOM;
 
-	return handle_pte_fault(mm, vma, address, pte, pmd, write_access);
+	return handle_pte_fault(mm, vma, address, pte, pmd, write_access);//分析缺页异常的原因
 }
 
 #ifndef __PAGETABLE_PUD_FOLDED

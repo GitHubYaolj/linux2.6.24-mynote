@@ -163,9 +163,9 @@ static struct anon_vma *page_lock_anon_vma(struct page *page)
 
 	rcu_read_lock();
 	anon_mapping = (unsigned long) page->mapping;
-	if (!(anon_mapping & PAGE_MAPPING_ANON))
+	if (!(anon_mapping & PAGE_MAPPING_ANON))//确认是一个匿名映射
 		goto out;
-	if (!page_mapped(page))
+	if (!page_mapped(page))//确认_mapcount大于等于0
 		goto out;
 
 	anon_vma = (struct anon_vma *) (anon_mapping - PAGE_MAPPING_ANON);
@@ -280,7 +280,7 @@ static int page_referenced_one(struct page *page,
 	if (address == -EFAULT)
 		goto out;
 
-	pte = page_check_address(page, mm, address, &ptl);
+	pte = page_check_address(page, mm, address, &ptl);//找到指向该页的页表项
 	if (!pte)
 		goto out;
 
@@ -550,7 +550,7 @@ void page_add_anon_rmap(struct page *page,
 {
 	VM_BUG_ON(!PageLocked(page));
 	VM_BUG_ON(address < vma->vm_start || address >= vma->vm_end);
-	if (atomic_inc_and_test(&page->_mapcount))
+	if (atomic_inc_and_test(&page->_mapcount))// _mapcount + 1
 		__page_set_anon_rmap(page, vma, address);
 	else
 		__page_check_anon_rmap(page, vma, address);
@@ -570,7 +570,7 @@ void page_add_new_anon_rmap(struct page *page,
 	struct vm_area_struct *vma, unsigned long address)
 {
 	BUG_ON(address < vma->vm_start || address >= vma->vm_end);
-	atomic_set(&page->_mapcount, 0); /* elevate count by 1 (starts at -1) */
+	atomic_set(&page->_mapcount, 0); /* elevate count by 1 (starts at -1) 置0*/
 	__page_set_anon_rmap(page, vma, address);
 }
 

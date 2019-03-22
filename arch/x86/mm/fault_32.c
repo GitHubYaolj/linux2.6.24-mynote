@@ -354,7 +354,7 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
 	 * If we're in an interrupt, have no user context or are running in an
 	 * atomic region then we must not take the fault..
 	 */
-	if (in_atomic() || !mm)
+	if (in_atomic() || !mm)// 内核线程的tsk->mm==NULL, 此处说明是内核态发生异常
 		goto bad_area_nosemaphore;
 
 	/* When running in the kernel we expect faults to occur only to
@@ -378,13 +378,18 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
 			goto bad_area_nosemaphore;
 		down_read(&mm->mmap_sem);
 	}
-
+    
+    /* Look up the first VMA which satisfies  addr < vm_end,  NULL if none. */
 	vma = find_vma(mm, address);
-	if (!vma)
+	if (!vma)// addr之后没有vma, 所以这个addr是个错误地址
 		goto bad_area;
 	if (vma->vm_start <= address)
-		goto good_area;
-	if (!(vma->vm_flags & VM_GROWSDOWN))
+		goto good_area;//addr 包含在vma内     
+
+    //如果addr后面有vma，但该vma不包含addr，此时还不能断定addr是错误地址
+    //可能是此vma属于栈的vma，addr在栈中，此情况是由于栈空间不够时再进栈导致的访问错误，
+    //栈的vma都有VM_GROWSDOWN标志，
+	if (!(vma->vm_flags & VM_GROWSDOWN))//没有这个标志，就错了
 		goto bad_area;
 	if (error_code & 4) {
 		/*
@@ -396,7 +401,7 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
 		if (address + 65536 + 32 * sizeof(unsigned long) < regs->esp)
 			goto bad_area;
 	}
-	if (expand_stack(vma, address))
+	if (expand_stack(vma, address))//查看栈能不能扩展，能的话返回0，进入缺页异常处理，否则确认栈溢出了
 		goto bad_area;
 /*
  * Ok, we have a good vm_area for this memory access, so
@@ -426,9 +431,10 @@ good_area:
 	 * make sure we exit gracefully rather than endlessly redo
 	 * the fault.
 	 */
-	fault = handle_mm_fault(mm, vma, address, write);
+	 //为引发缺页的进程分配一个物理页框， 先确定addr对应的各级页目录项是否存在，如不存在则进行分配
+	fault = handle_mm_fault(mm, vma, address, write);//正常情况下，fault会是0,说明缺页问题解决了
 	if (unlikely(fault & VM_FAULT_ERROR)) {
-		if (fault & VM_FAULT_OOM)
+		if (fault & VM_FAULT_OOM)//OOM这个级别的错误，需要杀掉进程
 			goto out_of_memory;
 		else if (fault & VM_FAULT_SIGBUS)
 			goto do_sigbus;
@@ -504,9 +510,9 @@ bad_area_nosemaphore:
 	}
 #endif
 
-no_context:
+no_context: //内核态出了问题
 	/* Are we prepared to handle this kernel fault?  */
-	if (fixup_exception(regs))
+	if (fixup_exception(regs))//搜索异常表，试图找到一个对应该异常的例程来进行修正
 		return;
 
 	/* 
@@ -517,7 +523,7 @@ no_context:
  	if (is_prefetch(regs, address, error_code))
  		return;
 
-/*
+/* 异常是由内核的程序设计缺陷导致的，将产生一个oops，下面的工作是打印CPU寄存器和内核态堆栈到控制台
  * Oops. The kernel tried to access some bad page. We'll have to
  * terminate things with extreme prejudice.
  */
@@ -585,7 +591,7 @@ no_context:
 	tsk->thread.error_code = error_code;
 	die("Oops", regs, error_code);
 	bust_spinlocks(0);
-	do_exit(SIGKILL);
+	do_exit(SIGKILL);//内核退出
 
 /*
  * We ran out of memory, or some other thing happened to us that made
