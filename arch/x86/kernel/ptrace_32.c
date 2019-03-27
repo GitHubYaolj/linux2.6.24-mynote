@@ -486,7 +486,7 @@ long arch_ptrace(struct task_struct *child, long request, long addr, long data)
 		child->exit_code = data;
 		/* make sure the single step bit is not set. */
 		clear_singlestep(child);
-		wake_up_process(child);
+		wake_up_process(child);//唤醒被跟踪进程。  被跟踪进程在系统调用执行前后 和 信号到达后，如果设置了PT_TRACED标志，会进入TASK_STOPPED状态,并通过CHLD通知跟踪者进程
 		ret = 0;
 		break;
 

@@ -202,13 +202,13 @@ repeat:
 
 	/* Go */
 	task->ptrace |= PT_PTRACED | ((task->real_parent != current)
-				      ? PT_ATTACHED : 0);
+				      ? PT_ATTACHED : 0);//目标进程设置PT_PTRACED标志
 	if (capable(CAP_SYS_PTRACE))
 		task->ptrace |= PT_PTRACE_CAP;
 
-	__ptrace_link(task, current);
+	__ptrace_link(task, current);//跟踪者进程变为目标进程的父进程   目标进程添加到跟踪者进程的ptrace_children链表
 
-	force_sig_specific(SIGSTOP, task);
+	force_sig_specific(SIGSTOP, task);//向目标进程发送一个STOP信号
 
 bad:
 	write_unlock_irqrestore(&tasklist_lock, flags);
@@ -473,7 +473,7 @@ asmlinkage long sys_ptrace(long request, long pid, long addr, long data)
 		goto out;
 	}
 
-	child = ptrace_get_task_struct(pid);
+	child = ptrace_get_task_struct(pid);//find_task_by_vpid
 	if (IS_ERR(child)) {
 		ret = PTR_ERR(child);
 		goto out;
@@ -490,7 +490,7 @@ asmlinkage long sys_ptrace(long request, long pid, long addr, long data)
 		goto out_put_task_struct;
 	}
 
-	ret = ptrace_check_attach(child, request == PTRACE_KILL);
+	ret = ptrace_check_attach(child, request == PTRACE_KILL);//检查跟踪者进程与目标进程是否连接
 	if (ret < 0)
 		goto out_put_task_struct;
 
