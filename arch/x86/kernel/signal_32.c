@@ -473,7 +473,7 @@ static int setup_rt_frame(int sig, struct k_sigaction *ka, siginfo_t *info,
 
 	/* Set up registers for signal handler */
 	regs->esp = (unsigned long) frame;
-	regs->eip = (unsigned long) ka->sa.sa_handler;
+	regs->eip = (unsigned long) ka->sa.sa_handler;//返回用户空间后执行 信号处理程序
 	regs->eax = (unsigned long) usig;
 	regs->edx = (unsigned long) &frame->info;
 	regs->ecx = (unsigned long) &frame->uc;

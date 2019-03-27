@@ -373,9 +373,9 @@ extern int get_dumpable(struct mm_struct *mm);
 #define MMF_DUMP_FILTER_DEFAULT \
 	((1 << MMF_DUMP_ANON_PRIVATE) |	(1 << MMF_DUMP_ANON_SHARED))
 
-struct sighand_struct {
-	atomic_t		count;
-	struct k_sigaction	action[_NSIG];
+struct sighand_struct {//管理设置的信号处理程序的信息
+	atomic_t		count;//共享该结构的进程数目
+	struct k_sigaction	action[_NSIG];//sigaction列表
 	spinlock_t		siglock;
 	wait_queue_head_t	signalfd_wqh;
 };
@@ -1058,9 +1058,9 @@ struct task_struct {
 	struct signal_struct *signal;
 	struct sighand_struct *sighand;
 
-	sigset_t blocked, real_blocked;
+	sigset_t blocked/*阻塞位掩码*/, real_blocked;
 	sigset_t saved_sigmask;		/* To be restored with TIF_RESTORE_SIGMASK */
-	struct sigpending pending;
+	struct sigpending pending;//链表连接 sigqueue-->siginfo_t
 
 	unsigned long sas_ss_sp;
 	size_t sas_ss_size;
