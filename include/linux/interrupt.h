@@ -250,11 +250,11 @@ enum
 	TIMER_SOFTIRQ,
 	NET_TX_SOFTIRQ,
 	NET_RX_SOFTIRQ,
-	BLOCK_SOFTIRQ,
+	BLOCK_SOFTIRQ,//块层，实现异步请求
 	TASKLET_SOFTIRQ,
-	SCHED_SOFTIRQ,
+	SCHED_SOFTIRQ,//实现SMP系统上周期性的负载均衡
 #ifdef CONFIG_HIGH_RES_TIMERS
-	HRTIMER_SOFTIRQ,
+	HRTIMER_SOFTIRQ,//高分辨率定时器 
 #endif
 };
 
@@ -299,7 +299,7 @@ extern void FASTCALL(raise_softirq(unsigned int nr));
 struct tasklet_struct
 {
 	struct tasklet_struct *next;
-	unsigned long state;
+	unsigned long state;// SCHED or RUN
 	atomic_t count;
 	void (*func)(unsigned long);
 	unsigned long data;
@@ -344,7 +344,7 @@ extern void FASTCALL(__tasklet_schedule(struct tasklet_struct *t));
 
 static inline void tasklet_schedule(struct tasklet_struct *t)
 {
-	if (!test_and_set_bit(TASKLET_STATE_SCHED, &t->state))
+	if (!test_and_set_bit(TASKLET_STATE_SCHED, &t->state))//检查之前是否已经注册了
 		__tasklet_schedule(t);
 }
 

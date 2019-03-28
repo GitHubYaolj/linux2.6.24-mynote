@@ -111,7 +111,7 @@ fastcall unsigned int do_IRQ(struct pt_regs *regs)
 	 * handler) we can't do that and just have to keep using the
 	 * current stack (which is the irq stack already after all)
 	 */
-	if (curctx != irqctx) {
+	if (curctx != irqctx) {//当前栈不是中断栈，切换栈
 		int arg1, arg2, ebx;
 
 		/* build the stack frame on the IRQ stack */

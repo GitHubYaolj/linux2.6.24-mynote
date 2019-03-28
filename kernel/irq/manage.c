@@ -383,9 +383,9 @@ int setup_irq(unsigned int irq, struct irqaction *new)
 	spin_unlock_irqrestore(&desc->lock, flags);
 
 	new->irq = irq;
-	register_irq_proc(irq);
+	register_irq_proc(irq);//建立目录/proc/irq/NUM
 	new->dir = NULL;
-	register_handler_proc(irq, new);
+	register_handler_proc(irq, new);//生成/proc/irq/NUM/name
 
 	return 0;
 

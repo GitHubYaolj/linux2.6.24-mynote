@@ -486,7 +486,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
 
 		desc->status &= ~IRQ_PENDING;
 		spin_unlock(&desc->lock);
-		action_ret = handle_IRQ_event(irq, action);
+		action_ret = handle_IRQ_event(irq, action);//高层ISR处理程序
 		if (!noirqdebug)
 			note_interrupt(irq, desc, action_ret);
 		spin_lock(&desc->lock);

@@ -223,7 +223,7 @@ restart:
 	/* Reset the pending bitmask before enabling irqs */
 	set_softirq_pending(0);
 
-	local_irq_enable();
+	local_irq_enable();//开中断 期间可能会有新的软中断到来
 
 	h = softirq_vec;
 
@@ -236,7 +236,7 @@ restart:
 		pending >>= 1;
 	} while (pending);
 
-	local_irq_disable();
+	local_irq_disable();//关中断
 
 	pending = local_softirq_pending();
 	if (pending && --max_restart)
@@ -258,17 +258,17 @@ asmlinkage void do_softirq(void)
 	__u32 pending;
 	unsigned long flags;
 
-	if (in_interrupt())
+	if (in_interrupt())//确认当前不处于中断上下文中
 		return;
 
-	local_irq_save(flags);
+	local_irq_save(flags);//禁用中断  防止中断或其他进程对位图的修改造成干扰
 
 	pending = local_softirq_pending();
 
 	if (pending)
 		__do_softirq();
 
-	local_irq_restore(flags);
+	local_irq_restore(flags);//恢复中断
 }
 
 #endif
@@ -315,7 +315,7 @@ void irq_exit(void)
  */
 inline fastcall void raise_softirq_irqoff(unsigned int nr)
 {
-	__raise_softirq_irqoff(nr);
+	__raise_softirq_irqoff(nr);//置位softirq_pending中对应位
 
 	/*
 	 * If we're in an interrupt or softirq, we're done
@@ -326,7 +326,7 @@ inline fastcall void raise_softirq_irqoff(unsigned int nr)
 	 * Otherwise we wake up ksoftirqd to make sure we
 	 * schedule the softirq soon.
 	 */
-	if (!in_interrupt())
+	if (!in_interrupt())//不在中断上下文中
 		wakeup_softirqd();
 }
 
@@ -363,7 +363,7 @@ void fastcall __tasklet_schedule(struct tasklet_struct *t)
 	local_irq_save(flags);
 	t->next = __get_cpu_var(tasklet_vec).list;
 	__get_cpu_var(tasklet_vec).list = t;
-	raise_softirq_irqoff(TASKLET_SOFTIRQ);
+	raise_softirq_irqoff(TASKLET_SOFTIRQ);//引发软中断
 	local_irq_restore(flags);
 }
 
@@ -396,8 +396,8 @@ static void tasklet_action(struct softirq_action *a)
 
 		list = list->next;
 
-		if (tasklet_trylock(t)) {
-			if (!atomic_read(&t->count)) {
+		if (tasklet_trylock(t)) {//如果该tasklet在各cpu上都没运行
+			if (!atomic_read(&t->count)) {//count为0，继续执行，否则说明tasklet已停用
 				if (!test_and_clear_bit(TASKLET_STATE_SCHED, &t->state))
 					BUG();
 				t->func(t->data);
@@ -479,7 +479,7 @@ EXPORT_SYMBOL(tasklet_kill);
 
 void __init softirq_init(void)
 {
-	open_softirq(TASKLET_SOFTIRQ, tasklet_action, NULL);
+	open_softirq(TASKLET_SOFTIRQ, tasklet_action, NULL);//注册软中断 
 	open_softirq(HI_SOFTIRQ, tasklet_hi_action, NULL);
 }
 
@@ -505,7 +505,7 @@ static int ksoftirqd(void * __bind_cpu)
 				goto wait_to_die;
 			do_softirq();
 			preempt_enable_no_resched();
-			cond_resched();
+			cond_resched();//在对当前进程设置了TIF_NEED_RESCHED标志的情况下，调用调度器
 			preempt_disable();
 		}
 		preempt_enable();
