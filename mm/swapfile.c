@@ -1001,7 +1001,7 @@ add_swap_extent(struct swap_info_struct *sis, unsigned long start_page,
 	if (lh != &sis->extent_list) {
 		se = list_entry(lh, struct swap_extent, list);
 		BUG_ON(se->start_page + se->nr_pages != start_page);
-		if (se->start_block + se->nr_pages == start_block) {
+		if (se->start_block + se->nr_pages == start_block) {//合并，使区间链表包含的数据项尽量少
 			/* Merge it */
 			se->nr_pages += nr_pages;
 			return 0;
@@ -1067,7 +1067,7 @@ static int setup_swap_extents(struct swap_info_struct *sis, sector_t *span)
 	int ret;
 
 	inode = sis->swap_file->f_mapping->host;
-	if (S_ISBLK(inode->i_mode)) {
+	if (S_ISBLK(inode->i_mode)) {//使用的是交换分区而不是交换文件
 		ret = add_swap_extent(sis, 0, sis->max, 0);
 		*span = sis->pages;
 		goto done;
@@ -1088,7 +1088,7 @@ static int setup_swap_extents(struct swap_info_struct *sis, sector_t *span)
 		unsigned block_in_page;
 		sector_t first_block;
 
-		first_block = bmap(inode, probe_block);
+		first_block = bmap(inode, probe_block);//给定块号的硬盘扇区编号
 		if (first_block == 0)
 			goto bad_bmap;
 
@@ -1107,7 +1107,7 @@ static int setup_swap_extents(struct swap_info_struct *sis, sector_t *span)
 			block = bmap(inode, probe_block + block_in_page);
 			if (block == 0)
 				goto bad_bmap;
-			if (block != first_block + block_in_page) {
+			if (block != first_block + block_in_page) {//一页当中各块的扇区是不连续的,丢弃这几个不连续的块，从下一个文件块的扇区地址开始搜索
 				/* Discontiguity */
 				probe_block++;
 				goto reprobe;
@@ -1622,7 +1622,7 @@ asmlinkage long sys_swapon(const char __user * specialfile, int swap_flags)
 		p->swap_map[0] = SWAP_MAP_BAD;
 		p->max = maxpages;
 		p->pages = nr_good_pages;
-		nr_extents = setup_swap_extents(p, &span);
+		nr_extents = setup_swap_extents(p, &span);//创建区间链表
 		if (nr_extents < 0) {
 			error = nr_extents;
 			goto bad_swap;

@@ -3818,7 +3818,7 @@ void fastcall __wake_up(wait_queue_head_t *q, unsigned int mode,
 	unsigned long flags;
 
 	spin_lock_irqsave(&q->lock, flags);
-	__wake_up_common(q, mode, nr_exclusive, 0, key);
+	__wake_up_common(q, mode, nr_exclusive, 0, key);//nr_exclusive 为将要唤醒的设置了WQ_FLAG_EXCLUSIVE标志的进程的数目
 	spin_unlock_irqrestore(&q->lock, flags);
 }
 EXPORT_SYMBOL(__wake_up);
