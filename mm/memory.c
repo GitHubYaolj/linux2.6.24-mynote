@@ -2011,7 +2011,7 @@ void swapin_readahead(swp_entry_t entry, unsigned long addr,struct vm_area_struc
 	/*
 	 * Get the number of handles we should do readahead io to.
 	 */
-	num = valid_swaphandles(entry, &offset);
+	num = valid_swaphandles(entry, &offset);//计算预读页的数目，pow(2, page_cluster)
 	for (i = 0; i < num; offset++, i++) {
 		/* Ok, do the async read-ahead now */
 		new_page = read_swap_cache_async(swp_entry(swp_type(entry),
@@ -2068,11 +2068,11 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 		goto out;
 	}
 	delayacct_set_flag(DELAYACCT_PF_SWAPIN);
-	page = lookup_swap_cache(entry);
+	page = lookup_swap_cache(entry);//从交换缓存中查找
 	if (!page) {
-		grab_swap_token(); /* Contend for token _before_ read-in */
- 		swapin_readahead(entry, address, vma);
- 		page = read_swap_cache_async(entry, vma, address);
+		grab_swap_token(); /* Contend for token _before_ read-in 尝试获取令牌*/
+ 		swapin_readahead(entry, address, vma);//预读
+ 		page = read_swap_cache_async(entry, vma, address);//异步读
 		if (!page) {
 			/*
 			 * Back out if somebody else faulted in this pte
@@ -2091,7 +2091,7 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	}
 
 	mark_page_accessed(page);
-	lock_page(page);
+	lock_page(page);//会等到上面的异步读操作结束
 	delayacct_clear_flag(DELAYACCT_PF_SWAPIN);
 
 	/*
@@ -2117,9 +2117,9 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 
 	flush_icache_page(vma, page);
 	set_pte_at(mm, address, page_table, pte);
-	page_add_anon_rmap(page, vma, address);
+	page_add_anon_rmap(page, vma, address);//逆向映射机制
 
-	swap_free(entry);
+	swap_free(entry);//检查是否可用释放交换区中对应的槽位
 	if (vm_swap_full())
 		remove_exclusive_swap_page(page);
 	unlock_page(page);

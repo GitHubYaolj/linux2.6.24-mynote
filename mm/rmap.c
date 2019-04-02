@@ -290,7 +290,7 @@ static int page_referenced_one(struct page *page,
 	/* Pretend the page is referenced if the task has the
 	   swap token and is in the middle of a page fault. */
 	if (mm != current->mm && has_swap_token(mm) &&
-			rwsem_is_locked(&mm->mmap_sem))
+			rwsem_is_locked(&mm->mmap_sem))//当前运行进程不持有交换令牌，而操作的某页在令牌持有者的地址空间中
 		referenced++;
 
 	(*mapcount)--;

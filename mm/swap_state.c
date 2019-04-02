@@ -170,7 +170,7 @@ int add_to_swap(struct page * page, gfp_t gfp_mask)
 		 * Add it to the swap cache and mark it dirty
 		 */
 		err = __add_to_swap_cache(page, entry,
-				gfp_mask|__GFP_NOMEMALLOC|__GFP_NOWARN);
+				gfp_mask|__GFP_NOMEMALLOC|__GFP_NOWARN);//page加入到swapper_space的基数树中
 
 		switch (err) {
 		case 0:				/* Success */
@@ -329,7 +329,7 @@ struct page *read_swap_cache_async(swp_entry_t entry,
 		 * called after lookup_swap_cache() failed, re-calling
 		 * that would confuse statistics.
 		 */
-		found_page = find_get_page(&swapper_space, entry.val);
+		found_page = find_get_page(&swapper_space, entry.val);//查找该页是否在交换缓存中
 		if (found_page)
 			break;
 
@@ -338,7 +338,7 @@ struct page *read_swap_cache_async(swp_entry_t entry,
 		 */
 		if (!new_page) {
 			new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE,
-								vma, addr);
+								vma, addr);//分配一个页
 			if (!new_page)
 				break;		/* Out of memory */
 		}
@@ -353,13 +353,13 @@ struct page *read_swap_cache_async(swp_entry_t entry,
 		 * the just freed swap entry for an existing page.
 		 * May fail (-ENOMEM) if radix-tree node allocation failed.
 		 */
-		err = add_to_swap_cache(new_page, entry);
+		err = add_to_swap_cache(new_page, entry);//将页添加到交换缓存
 		if (!err) {
 			/*
 			 * Initiate read into locked page and return.
 			 */
-			lru_cache_add_active(new_page);
-			swap_readpage(NULL, new_page);
+			lru_cache_add_active(new_page);//将页添加到lru缓存
+			swap_readpage(NULL, new_page);//将实际的读请求提交到块层
 			return new_page;
 		}
 	} while (err != -ENOENT && err != -ENOMEM);
