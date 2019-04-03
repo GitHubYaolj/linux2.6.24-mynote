@@ -139,11 +139,11 @@ struct swap_info_struct {
 	struct list_head extent_list;
 	struct swap_extent *curr_swap_extent;
 	unsigned old_block_size;
-	unsigned short * swap_map;
+	unsigned short * swap_map;//空闲槽对应的数组项为0
 	unsigned int lowest_bit;
 	unsigned int highest_bit;
-	unsigned int cluster_next;
-	unsigned int cluster_nr;
+	unsigned int cluster_next;//当前聚集中可用的下一个槽位索引
+	unsigned int cluster_nr;//当前聚集中可用的槽位数
 	unsigned int pages;
 	unsigned int max;
 	unsigned int inuse_pages;

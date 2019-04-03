@@ -399,9 +399,9 @@ int page_referenced(struct page *page, int is_locked)
 
 	if (page_mapped(page) && page->mapping) {
 		if (PageAnon(page))
-			referenced += page_referenced_anon(page);
+			referenced += page_referenced_anon(page);//page_referenced_anon计算了访问一个匿名映射页的次数
 		else if (is_locked)
-			referenced += page_referenced_file(page);
+			referenced += page_referenced_file(page);//page_referenced_file计算了访问一个文件映射页的次数
 		else if (TestSetPageLocked(page))
 			referenced++;
 		else {

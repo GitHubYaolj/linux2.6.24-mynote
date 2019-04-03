@@ -1031,18 +1031,18 @@ force_reclaim_mapped:
 		if (page_mapped(page)) {
 			if (!reclaim_mapped /*不回收映射页*/||
 			    (total_swap_pages == 0 && PageAnon(page))/*系统没有交换区，该页为匿名页，即系统没有地方可换出 */ ||
-			    page_referenced(page, 0)/*刚有个进程访问了该页*/) {
+			    page_referenced(page, 0)/*返回映射该页进程的数目，刚有个进程访问了该页*/) {
 				list_add(&page->lru, &l_active);
 				continue;
 			}
 		}
-		list_add(&page->lru, &l_inactive);
+		list_add(&page->lru, &l_inactive);//如果page_mapped(page)==0 即page->_mapcount==-1,是一个未映射的页，则直接放入inactive_list
 	}
 
 	pagevec_init(&pvec, 1);
 	pgmoved = 0;
 	spin_lock_irq(&zone->lru_lock);
-	while (!list_empty(&l_inactive)) {
+	while (!list_empty(&l_inactive)) {//这部分不需要调用 shrink_page_list 回写一下数据  ????  而直接返回伙伴系统    可能是上文的判断条件，page_referenced==0,没有进程映射该页，所以可以直接回收
 		page = lru_to_page(&l_inactive);
 		prefetchw_prev_lru_page(page, &l_inactive, flags);
 		VM_BUG_ON(PageLRU(page));
@@ -1059,7 +1059,7 @@ force_reclaim_mapped:
 			pgmoved = 0;
 			if (buffer_heads_over_limit)
 				pagevec_strip(&pvec);
-			__pagevec_release(&pvec);
+			__pagevec_release(&pvec);//将相应页帧返还给伙伴系统
 			spin_lock_irq(&zone->lru_lock);
 		}
 	}
@@ -1128,7 +1128,7 @@ static unsigned long shrink_zone(int priority, struct zone *zone,
 	else
 		nr_inactive = 0;
 
-	while (nr_active || nr_inactive) {
+	while (nr_active || nr_inactive) {//即将扫描的active/inactive页的数目 要 大于 swap_cluster_max(32)，才会向下执行，否则，退出
 		if (nr_active) {
 			nr_to_scan = min(nr_active,
 					(unsigned long)sc->swap_cluster_max);
