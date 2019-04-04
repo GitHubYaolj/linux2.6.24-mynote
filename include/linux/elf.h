@@ -294,7 +294,7 @@ typedef struct {
   Elf32_Word	sh_link;
   Elf32_Word	sh_info;
   Elf32_Word	sh_addralign;
-  Elf32_Word	sh_entsize;
+  Elf32_Word	sh_entsize;//该段在核心区或者初始化区域中的相对位置;  初始化区域会在这里置位INIT_OFFSET_MASK标志
 } Elf32_Shdr;
 
 typedef struct elf64_shdr {

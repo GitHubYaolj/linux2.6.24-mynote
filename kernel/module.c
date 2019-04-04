@@ -65,7 +65,7 @@ extern int module_sysfs_initialized;
 /* List of modules, protected by module_mutex or preempt_disable
  * (add/delete uses stop_machine). */
 static DEFINE_MUTEX(module_mutex);
-static LIST_HEAD(modules);
+static LIST_HEAD(modules);//全局modules链表
 
 static BLOCKING_NOTIFIER_HEAD(module_notify_list);
 
@@ -543,7 +543,7 @@ static int use_module(struct module *a, struct module *b)
 
 	if (b == NULL || already_uses(a, b)) return 1;
 
-	if (!strong_try_module_get(b))
+	if (!strong_try_module_get(b))//增加模块的引用计数，使之不能从内核移除
 		return 0;
 
 	DEBUGP("Allocating new usage for %s.\n", a->name);
@@ -721,7 +721,7 @@ sys_delete_module(const char __user *name_user, unsigned int flags)
 		mod->exit();
 		mutex_lock(&module_mutex);
 	}
-	free_module(mod);
+	free_module(mod);//释放模块占用的内存空间
 
  out:
 	mutex_unlock(&module_mutex);
@@ -1404,7 +1404,7 @@ static int simplify_symbols(Elf_Shdr *sechdrs,
 		case SHN_UNDEF:
 			sym[i].st_value
 			  = resolve_symbol(sechdrs, versindex,
-					   strtab + sym[i].st_name, mod);
+					   strtab + sym[i].st_name, mod);//解决未定义的符号引用
 
 			/* Ok if resolved.  */
 			if (sym[i].st_value != 0)
@@ -1711,17 +1711,22 @@ static struct module *load_module(void __user *umod,
 		goto truncated;
 
 	/* Convenience variables */
-	sechdrs = (void *)hdr + hdr->e_shoff;
+	sechdrs = (void *)hdr + hdr->e_shoff;// hdr类型 elf32_hdr
+	                                     // sechdrs类型 Elf32_Shdr
+	                            
 	secstrings = (void *)hdr + sechdrs[hdr->e_shstrndx].sh_offset;
 	sechdrs[0].sh_addr = 0;
-
+//为阅读方便 如下
+    struct elf32_hdr myhdr;
+    struct Elf32_Shdr mysechdrs;
+//为阅读方便 以上
 	for (i = 1; i < hdr->e_shnum; i++) {
 		if (sechdrs[i].sh_type != SHT_NOBITS
 		    && len < sechdrs[i].sh_offset + sechdrs[i].sh_size)
 			goto truncated;
 
 		/* Mark all sections sh_addr with their address in the
-		   temporary image. */
+		   temporary image. 将所有段的sh_addr，都设置为该段在临时映像中的绝对地址*/
 		sechdrs[i].sh_addr = (size_t)hdr + sechdrs[i].sh_offset;
 
 		/* Internal symbols and strings. */
@@ -1738,7 +1743,7 @@ static struct module *load_module(void __user *umod,
 	}
 
 	modindex = find_sec(hdr, sechdrs, secstrings,
-			    ".gnu.linkonce.this_module");
+			    ".gnu.linkonce.this_module");//在.gnu.linkonce.this_module段中，有一个struct module的实例
 	if (!modindex) {
 		printk(KERN_WARNING "No module found in object\n");
 		err = -ENOEXEC;
@@ -1841,7 +1846,7 @@ static struct module *load_module(void __user *umod,
 	layout_sections(mod, hdr, sechdrs, secstrings);
 
 	/* Do the allocs. */
-	ptr = module_alloc(mod->core_size);
+	ptr = module_alloc(mod->core_size);//内核中持久驻留的代码的总长度
 	if (!ptr) {
 		err = -ENOMEM;
 		goto free_percpu;
@@ -1849,7 +1854,7 @@ static struct module *load_module(void __user *umod,
 	memset(ptr, 0, mod->core_size);
 	mod->module_core = ptr;
 
-	ptr = module_alloc(mod->init_size);
+	ptr = module_alloc(mod->init_size);//模块初始化所需的所有段的总长度
 	if (!ptr && mod->init_size) {
 		err = -ENOMEM;
 		goto free_core;
@@ -1875,7 +1880,7 @@ static struct module *load_module(void __user *umod,
 			memcpy(dest, (void *)sechdrs[i].sh_addr,
 			       sechdrs[i].sh_size);
 		/* Update sh_addr to point to copy in image. */
-		sechdrs[i].sh_addr = (unsigned long)dest;
+		sechdrs[i].sh_addr = (unsigned long)dest;//设置sh_addr为该段的最终位置，此前其指向段在模块的临时内存区中的位置
 		DEBUGP("\t0x%lx %s\n", sechdrs[i].sh_addr, secstrings + sechdrs[i].sh_name);
 	}
 	/* Module has been moved. */
@@ -1890,7 +1895,7 @@ static struct module *load_module(void __user *umod,
 		goto cleanup;
 
 	/* Set up license info based on the info section */
-	set_license(mod, get_modinfo(sechdrs, infoindex, "license"));
+	set_license(mod, get_modinfo(sechdrs, infoindex, "license"));//查询模块许可证
 
 	if (strcmp(mod->name, "ndiswrapper") == 0)
 		add_taint(TAINT_PROPRIETARY_MODULE);
@@ -1902,25 +1907,29 @@ static struct module *load_module(void __user *umod,
 
 	/* Fix up syms, so that st_value is a pointer to location. */
 	err = simplify_symbols(sechdrs, symindex, strtab, versindex, pcpuindex,
-			       mod);
+			       mod);//解决引用和重定向
 	if (err < 0)
 		goto cleanup;
 
-	/* Set up EXPORTed & EXPORT_GPLed symbols (section 0 is 0 length) */
+	/* Set up EXPORTed & EXPORT_GPLed symbols (section 0 is 0 length) 设置导出的符号和GPL符号*/
 	mod->num_syms = sechdrs[exportindex].sh_size / sizeof(*mod->syms);
 	mod->syms = (void *)sechdrs[exportindex].sh_addr;
 	if (crcindex)
 		mod->crcs = (void *)sechdrs[crcindex].sh_addr;
+    
 	mod->num_gpl_syms = sechdrs[gplindex].sh_size / sizeof(*mod->gpl_syms);
 	mod->gpl_syms = (void *)sechdrs[gplindex].sh_addr;
 	if (gplcrcindex)
 		mod->gpl_crcs = (void *)sechdrs[gplcrcindex].sh_addr;
+    
 	mod->num_gpl_future_syms = sechdrs[gplfutureindex].sh_size /
 					sizeof(*mod->gpl_future_syms);
+    
 	mod->num_unused_syms = sechdrs[unusedindex].sh_size /
 					sizeof(*mod->unused_syms);
 	mod->num_unused_gpl_syms = sechdrs[unusedgplindex].sh_size /
 					sizeof(*mod->unused_gpl_syms);
+    
 	mod->gpl_future_syms = (void *)sechdrs[gplfutureindex].sh_addr;
 	if (gplfuturecrcindex)
 		mod->gpl_future_crcs = (void *)sechdrs[gplfuturecrcindex].sh_addr;
@@ -1947,7 +1956,7 @@ static struct module *load_module(void __user *umod,
  	markersstringsindex = find_sec(hdr, sechdrs, secstrings,
 					"__markers_strings");
 
-	/* Now do relocations. */
+	/* Now do relocations. 再次遍历模块的所有段，根据段类型SHT_REL or SHT_RELA ，调用不同函数进行重定向*/
 	for (i = 1; i < hdr->e_shnum; i++) {
 		const char *strtab = (char *)sechdrs[strindex].sh_addr;
 		unsigned int info = sechdrs[i].sh_info;
@@ -1996,7 +2005,7 @@ static struct module *load_module(void __user *umod,
 		marker_update_probe_range(mod->markers,
 			mod->markers + mod->num_markers, NULL, NULL);
 #endif
-	err = module_finalize(hdr, sechdrs, mod);
+	err = module_finalize(hdr, sechdrs, mod);//特定于体系结构的结束工作
 	if (err < 0)
 		goto cleanup;
 
@@ -2029,7 +2038,7 @@ static struct module *load_module(void __user *umod,
 			 sechdrs[setupindex].sh_addr,
 			 sechdrs[setupindex].sh_size
 			 / sizeof(struct kernel_param),
-			 NULL);
+			 NULL);//将mod->args字符串转换为一个kernel_param实例的数组
 	if (err < 0)
 		goto arch_cleanup;
 
@@ -2104,7 +2113,7 @@ sys_init_module(void __user *umod,
 	if (mutex_lock_interruptible(&module_mutex) != 0)
 		return -EINTR;
 
-	/* Do all the hard work */
+	/* Do all the hard work 完成所以艰苦的工作 TT */
 	mod = load_module(umod, len, uargs);
 	if (IS_ERR(mod)) {
 		mutex_unlock(&module_mutex);
