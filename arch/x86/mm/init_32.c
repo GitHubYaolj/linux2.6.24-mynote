@@ -251,7 +251,7 @@ static void __init kmap_init(void)
 	unsigned long kmap_vstart;
 
 	/* cache the first kmap pte */
-	kmap_vstart = __fix_to_virt(FIX_KMAP_BEGIN);
+	kmap_vstart = __fix_to_virt(FIX_KMAP_BEGIN);//计算固定映射常数对应的虚拟地址
 	kmap_pte = kmap_get_fixmap_pte(kmap_vstart);
 
 	kmap_prot = PAGE_KERNEL;
@@ -428,7 +428,7 @@ static void __init pagetable_init (void)
 		__PAGE_KERNEL_EXEC |= _PAGE_GLOBAL;
 	}
 
-	kernel_physical_mapping_init(pgd_base);//将物理内存页(前896M)映射到虚拟地址空间
+	kernel_physical_mapping_init(pgd_base);//将物理内存页(前896M)映射到虚拟地址空间,这些页帧都是直接映射到PAGE_OFFSET之上的虚拟内存区。这使得内核无需处理页表即可寻址896M内存
 	remap_numa_kva();
 
 	/*

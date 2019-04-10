@@ -365,7 +365,7 @@ void __init zone_sizes_init(void)
 	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;
 #ifdef CONFIG_HIGHMEM
 	max_zone_pfns[ZONE_HIGHMEM] = highend_pfn;
-	add_active_range(0, 0, highend_pfn);
+	add_active_range(0, 0, highend_pfn);//对可用内存建立一个early_node_map
 #else
 	add_active_range(0, 0, max_low_pfn);
 #endif
@@ -583,7 +583,7 @@ void __init setup_arch(char **cmdline_p)
 		efi_init();
 	else {
 		printk(KERN_INFO "BIOS-provided physical RAM map:\n");
-		print_memory_map(memory_setup());
+		print_memory_map(memory_setup());//memory_setup()调用machine_specific_memory_setup,返回字符串显示: 系统占据的内存区和空闲的内存区 
 	}
 
 	copy_edd();
@@ -612,7 +612,7 @@ void __init setup_arch(char **cmdline_p)
 	strlcpy(command_line, boot_command_line, COMMAND_LINE_SIZE);
 	*cmdline_p = command_line;
 
-	max_low_pfn = setup_memory();
+	max_low_pfn = setup_memory();//确定每个结点可用的物理内存页的数目；初始化bootmem
 
 #ifdef CONFIG_VMI
 	/*
@@ -635,7 +635,7 @@ void __init setup_arch(char **cmdline_p)
 #ifdef CONFIG_SMP
 	smp_alloc_memory(); /* AP processor realmode stacks in low memory*/
 #endif
-	paging_init();
+	paging_init();//建立只能用于内核的页表，即直接映射的那896M
 	remapped_pgdat_init();
 	sparse_init();
 	zone_sizes_init();
