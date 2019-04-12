@@ -462,7 +462,7 @@ void *__vmalloc_area_node(struct vm_struct *area, gfp_t gfp_mask,
 		}
 	}
 
-	if (map_vm_area(area, prot, &pages))
+	if (map_vm_area(area, prot, &pages))//为分散的物理内存页建立所需的目录项和页表项，pgd为init_mm.pdg
 		goto fail;
 	return area->addr;
 

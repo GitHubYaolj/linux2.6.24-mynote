@@ -387,7 +387,7 @@ struct kmem_cache {
 	unsigned int shared;
 
 	unsigned int buffer_size;
-	u32 reciprocal_buffer_size;
+	u32 reciprocal_buffer_size;//避免使用除法
 /* 3) touched by every alloc & free from the backend */
 
 	unsigned int flags;		/* constant flags 如果管理结构存储在slab外面，置位CFLGS_OFF_SLAB*/
@@ -402,7 +402,7 @@ struct kmem_cache {
 
 	size_t colour;			/* cache colouring range 颜色数目*/
 	unsigned int colour_off;	/* colour offset */
-	struct kmem_cache *slabp_cache;
+	struct kmem_cache *slabp_cache;//指向分配slab头部管理数据的缓存，如果slab头部管理数据在slab上，则为NULL
 	unsigned int slab_size;
 	unsigned int dflags;		/* dynamic flags */
 

@@ -58,7 +58,7 @@ unsigned int nr_free_highpages (void)
 	return pages;
 }
 
-static int pkmap_count[LAST_PKMAP];
+static int pkmap_count[LAST_PKMAP];//每个元素对应一个持久映射页,指示内核中有几处使用该页
 static unsigned int last_pkmap_nr;
 static  __cacheline_aligned_in_smp DEFINE_SPINLOCK(kmap_lock);
 
@@ -124,7 +124,7 @@ start:
 	for (;;) {
 		last_pkmap_nr = (last_pkmap_nr + 1) & LAST_PKMAP_MASK;
 		if (!last_pkmap_nr) {
-			flush_all_zero_pkmaps();
+			flush_all_zero_pkmaps();//删除与之对应的页表，刷出相关TLB
 			count = LAST_PKMAP;
 		}
 		if (!pkmap_count[last_pkmap_nr])
@@ -153,7 +153,7 @@ start:
 			goto start;
 		}
 	}
-	vaddr = PKMAP_ADDR(last_pkmap_nr);
+	vaddr = PKMAP_ADDR(last_pkmap_nr);//反向扫描pkmap_count[LAST_PKMAP]数组，找到的第一个非空的位置，标记为last_pkmap_nr，由它确定虚拟地址
 	set_pte_at(&init_mm, vaddr,
 		   &(pkmap_page_table[last_pkmap_nr]), mk_pte(page, kmap_prot));
 
@@ -236,7 +236,7 @@ EXPORT_SYMBOL(kunmap_high);
  */
 struct page_address_map {
 	struct page *page;
-	void *virtual;
+	void *virtual;//该页在虚拟地址空间中分配的位置
 	struct list_head list;
 };
 
@@ -268,14 +268,14 @@ void *page_address(struct page *page)
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
 
-	pas = page_slot(page);
+	pas = page_slot(page);//哈希函数，得到在page_address_htable哈希表中的位置
 	ret = NULL;
 	spin_lock_irqsave(&pas->lock, flags);
 	if (!list_empty(&pas->lh)) {
 		struct page_address_map *pam;
 
 		list_for_each_entry(pam, &pas->lh, list) {
-			if (pam->page == page) {
+			if (pam->page == page) {//找到该页
 				ret = pam->virtual;
 				goto done;
 			}
@@ -296,7 +296,7 @@ void set_page_address(struct page *page, void *virtual)
 
 	BUG_ON(!PageHighMem(page));
 
-	pas = page_slot(page);
+	pas = page_slot(page);//哈希函数，此处返回了该page要插入的哈希表的位置
 	if (virtual) {		/* Add */
 		BUG_ON(list_empty(&page_address_pool));
 

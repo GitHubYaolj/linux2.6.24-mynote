@@ -24,9 +24,9 @@ struct vm_area_struct;
 
 struct vm_struct {
 	/* keep next,addr,size together to speedup lookups */
-	struct vm_struct	*next;
-	void			*addr;
-	unsigned long		size;
+	struct vm_struct	*next;//形成一个全局链表 vmlist
+	void			*addr;//该子区域在虚拟地址空间中的起始地址
+	unsigned long		size;//该子区域的长度
 	unsigned long		flags;
 	struct page		**pages;
 	unsigned int		nr_pages;
