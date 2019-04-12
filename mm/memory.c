@@ -2161,7 +2161,7 @@ static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	/* Allocate our own private page. */
 	pte_unmap(page_table);
 
-	if (unlikely(anon_vma_prepare(vma)))//分配一个anon_vma实例，反向映射相关
+	if (unlikely(anon_vma_prepare(vma)))//分配一个anon_vma实例，反向映射相关,  anon_vma指向逆向链表的表头(如果目前只有新的这个vma使用该page,就分配一个anon_vma),page->mapping赋值这个(表头+1),逆向时用
 		goto oom;
 	page = alloc_zeroed_user_highpage_movable(vma, address);//调用alloc_page分配页，页被0填充
 	if (!page)
@@ -2474,7 +2474,8 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 
 	entry = *pte;
 	if (!pte_present(entry)) {//页不在物理内存中  (_PAGE_PRESENT | _PAGE_PROTNONE)  -------请求调页
-		if (pte_none(entry)) {//没有对应的页表项,pte尚未写入任何物理地址，即还根本没有分配物理页
+	    //分如下三种情况
+		if (pte_none(entry)) {//1. 没有对应的页表项,pte尚未写入任何物理地址，即还根本没有分配物理页
 			if (vma->vm_ops) {
 				if (vma->vm_ops->fault || vma->vm_ops->nopage)
 					return do_linear_fault(mm, vma, address,
@@ -2486,11 +2487,11 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 			return do_anonymous_page(mm, vma, address,
 						 pte, pmd, write_access);
 		}
-		if (pte_file(entry))//检查页表项是否属于非线性映射 _PAGE_FILE
+		if (pte_file(entry))//2. 检查页表项是否属于非线性映射 _PAGE_FILE
 			return do_nonlinear_fault(mm, vma, address,
 					pte, pmd, write_access, entry);
 		return do_swap_page(mm, vma, address,
-					pte, pmd, write_access, entry);//页不在物理内存中，页表中保存了相关的信息，意味着该页被换出，需从交换区换入
+					pte, pmd, write_access, entry);//3. 页不在物理内存中，页表中保存了相关的信息，意味着该页被换出，需从交换区换入
 	}
 
 	ptl = pte_lockptr(mm, pmd);
@@ -2540,7 +2541,7 @@ int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 		return hugetlb_fault(mm, vma, address, write_access);
 
 	pgd = pgd_offset(mm, address);//addr对应的一级页表条目
-	pud = pud_alloc(mm, pgd, address);
+	pud = pud_alloc(mm, pgd, address);//linux中用三级页表，pgd == pud
 	if (!pud)
 		return VM_FAULT_OOM;
 	pmd = pmd_alloc(mm, pud, address);

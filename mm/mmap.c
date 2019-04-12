@@ -271,7 +271,7 @@ asmlinkage unsigned long sys_brk(unsigned long brk)
 		goto out;
 
 	/* Ok, looks good - let it rip. */
-	if (do_brk(oldbrk, newbrk-oldbrk) != oldbrk)
+	if (do_brk(oldbrk, newbrk-oldbrk) != oldbrk)//a simplified "do_mmap" ¼ò»¯°ædo_mmap_pgoffµÄÄäÃûÓ³Éä
 		goto out;
 set_brk:
 	mm->brk = brk;
