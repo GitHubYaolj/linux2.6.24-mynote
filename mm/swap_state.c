@@ -25,9 +25,9 @@
  * future use of radix_tree tags in the swap cache.
  */
 static const struct address_space_operations swap_aops = {
-	.writepage	= swap_writepage,
-	.sync_page	= block_sync_page,
-	.set_page_dirty	= __set_page_dirty_nobuffers,
+	.writepage	= swap_writepage,//将脏页与交换区同步，并从交换缓存中移除该页
+	.sync_page	= block_sync_page,//页同步，与上面函数啥区别?????
+	.set_page_dirty	= __set_page_dirty_nobuffers,//标记页为脏
 	.migratepage	= migrate_page,
 };
 
@@ -39,7 +39,7 @@ static struct backing_dev_info swap_backing_dev_info = {
 struct address_space swapper_space = {
 	.page_tree	= RADIX_TREE_INIT(GFP_ATOMIC|__GFP_NOWARN),
 	.tree_lock	= __RW_LOCK_UNLOCKED(swapper_space.tree_lock),
-	.a_ops		= &swap_aops,
+	.a_ops		= &swap_aops,//交换区和物理内存之间传输数据的具体实现接口
 	.i_mmap_nonlinear = LIST_HEAD_INIT(swapper_space.i_mmap_nonlinear),
 	.backing_dev_info = &swap_backing_dev_info,
 };
@@ -154,7 +154,7 @@ int add_to_swap(struct page * page, gfp_t gfp_mask)
 	BUG_ON(!PageLocked(page));
 
 	for (;;) {
-		entry = get_swap_page();
+		entry = get_swap_page();//在交换区分配槽位
 		if (!entry.val)
 			return 0;
 
@@ -175,7 +175,7 @@ int add_to_swap(struct page * page, gfp_t gfp_mask)
 		switch (err) {
 		case 0:				/* Success */
 			SetPageUptodate(page);
-			SetPageDirty(page);
+			SetPageDirty(page);//页设置为脏，因为页的内容还没有同步到交换区
 			INC_CACHE_INFO(add_total);
 			return 1;
 		case -EEXIST:

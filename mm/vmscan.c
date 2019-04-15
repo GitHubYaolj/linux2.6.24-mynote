@@ -591,8 +591,8 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 free_it:
 		unlock_page(page);
 		nr_reclaimed++;
-		if (!pagevec_add(&freed_pvec, page))
-			__pagevec_release_nonlru(&freed_pvec);
+		if (!pagevec_add(&freed_pvec, page))//将需要释放的页插入到freed_pvec页向量中
+			__pagevec_release_nonlru(&freed_pvec);//集中释放页向量中的页
 		continue;
 
 activate_locked:

@@ -42,7 +42,7 @@ static const char Unused_file[] = "Unused swap file entry ";
 static const char Bad_offset[] = "Bad swap offset entry ";
 static const char Unused_offset[] = "Unused swap offset entry ";
 
-struct swap_list_t swap_list = {-1, -1};
+struct swap_list_t swap_list = {-1, -1};//专门为查找第一个交换区而定义
 
 static struct swap_info_struct swap_info[MAX_SWAPFILES];
 
@@ -1104,7 +1104,7 @@ static int setup_swap_extents(struct swap_info_struct *sis, sector_t *span)
 					block_in_page++) {
 			sector_t block;
 
-			block = bmap(inode, probe_block + block_in_page);
+			block = bmap(inode, probe_block + block_in_page);//得到给定块号所对应的磁盘扇区编号
 			if (block == 0)
 				goto bad_bmap;
 			if (block != first_block + block_in_page) {//一页当中各块的扇区是不连续的,丢弃这几个不连续的块，从下一个文件块的扇区地址开始搜索
@@ -1125,7 +1125,7 @@ static int setup_swap_extents(struct swap_info_struct *sis, sector_t *span)
 		/*
 		 * We found a PAGE_SIZE-length, PAGE_SIZE-aligned run of blocks
 		 */
-		ret = add_swap_extent(sis, page_no, 1, first_block);
+		ret = add_swap_extent(sis, page_no, 1, first_block);//如果一页中的各块在磁盘上也是连续的，add_swap_extent新增一个swap_extent，并试图和之前的swap_extent合并
 		if (ret < 0)
 			goto out;
 		nr_extents += ret;
@@ -1438,7 +1438,7 @@ asmlinkage long sys_swapon(const char __user * specialfile, int swap_flags)
 	spin_lock(&swap_lock);
 	p = swap_info;
 	for (type = 0 ; type < nr_swapfiles ; type++,p++)
-		if (!(p->flags & SWP_USED))
+		if (!(p->flags & SWP_USED))//找到一个空闲数组项
 			break;
 	error = -EPERM;
 	if (type >= MAX_SWAPFILES) {
@@ -1494,7 +1494,7 @@ asmlinkage long sys_swapon(const char __user * specialfile, int swap_flags)
 	error = -EINVAL;
 	if (S_ISBLK(inode->i_mode)) {
 		bdev = I_BDEV(inode);
-		error = bd_claim(bdev, sys_swapon);
+		error = bd_claim(bdev, sys_swapon);//如果将一个块设备分区用作交换区，此处获得该块设备block_device实例
 		if (error < 0) {
 			bdev = NULL;
 			error = -EINVAL;
@@ -1526,13 +1526,13 @@ asmlinkage long sys_swapon(const char __user * specialfile, int swap_flags)
 		error = -EINVAL;
 		goto bad_swap;
 	}
-	page = read_mapping_page(mapping, 0, swap_file);
+	page = read_mapping_page(mapping, 0, swap_file);//读入第一页
 	if (IS_ERR(page)) {
 		error = PTR_ERR(page);
 		goto bad_swap;
 	}
 	kmap(page);
-	swap_header = page_address(page);
+	swap_header = page_address(page);//用swap_header解析第一页数据， 并填充swap_info_struct结构
 
 	if (!memcmp("SWAP-SPACE",swap_header->magic.magic,10))
 		swap_header_version = 1;

@@ -132,22 +132,22 @@ enum {
  * The in-memory structure used to track swap areas.
  */
 struct swap_info_struct {
-	unsigned int flags;
+	unsigned int flags;// SWP_USED  SWP_WRITEOK  SWP_ACTIVE 描述该交换区的状态
 	int prio;			/* swap priority */
 	struct file *swap_file;
 	struct block_device *bdev;
 	struct list_head extent_list;
 	struct swap_extent *curr_swap_extent;
 	unsigned old_block_size;
-	unsigned short * swap_map;//空闲槽对应的数组项为0
-	unsigned int lowest_bit;
+	unsigned short * swap_map;//空闲槽对应的数组项为0,每个槽位对应一个short,在sys_swapon时分配
+	unsigned int lowest_bit;//在lowest_bit之下和highest_bit之上是没有空闲槽位的
 	unsigned int highest_bit;
 	unsigned int cluster_next;//当前聚集中可用的下一个槽位索引
 	unsigned int cluster_nr;//当前聚集中可用的槽位数
-	unsigned int pages;
-	unsigned int max;
+	unsigned int pages;   //该交换区中可用槽位的总数
+	unsigned int max;//通常==pages+1，第一个槽位由内核用作标识，还用来存储状态信息，如交换区长度和坏扇区列表
 	unsigned int inuse_pages;
-	int next;			/* next entry on swap list */
+	int next;			/* next entry on swap list 交换区链表*/
 };
 
 struct swap_list_t {
