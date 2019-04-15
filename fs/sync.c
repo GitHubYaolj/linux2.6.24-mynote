@@ -23,13 +23,13 @@
  */
 static void do_sync(unsigned long wait)
 {
-	wakeup_pdflush(0);
-	sync_inodes(0);		/* All mappings, inodes and their blockdevs */
+	wakeup_pdflush(0);//参数为0，回写系统中所有的脏页
+	sync_inodes(0);		/* All mappings, inodes and their blockdevs   0异步执行 */
 	DQUOT_SYNC(NULL);
 	sync_supers();		/* Write the superblocks */
 	sync_filesystems(0);	/* Start syncing the filesystems */
 	sync_filesystems(wait);	/* Waitingly sync the filesystems */
-	sync_inodes(wait);	/* Mappings, inodes and blockdevs, again. */
+	sync_inodes(wait);	/* Mappings, inodes and blockdevs, again.     1等待写操作结束*/
 	if (!wait)
 		printk("Emergency Sync complete\n");
 	if (unlikely(laptop_mode))
@@ -98,7 +98,7 @@ long do_fsync(struct file *file, int datasync)
 	if (!ret)
 		ret = err;
 	mutex_unlock(&mapping->host->i_mutex);
-	err = filemap_fdatawait(mapping);
+	err = filemap_fdatawait(mapping);//等待在(上面发起的)filemap_fdatawrite写操作结束
 	if (!ret)
 		ret = err;
 out:

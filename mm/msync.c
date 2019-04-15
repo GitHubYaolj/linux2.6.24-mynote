@@ -82,7 +82,7 @@ asmlinkage long sys_msync(unsigned long start, size_t len, int flags)
 				(vma->vm_flags & VM_SHARED)) {
 			get_file(file);
 			up_read(&mm->mmap_sem);
-			error = do_fsync(file, 0);
+			error = do_fsync(file, 0);//参考单个文件的同步
 			fput(file);
 			if (error || start >= end)
 				goto out;

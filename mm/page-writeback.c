@@ -543,7 +543,7 @@ static void background_writeout(unsigned long _min_pages)
 	struct writeback_control wbc = {
 		.bdi		= NULL,
 		.sync_mode	= WB_SYNC_NONE,
-		.older_than_this = NULL,
+		.older_than_this = NULL,//不要求页在回写时，已经脏了一段时间
 		.nr_to_write	= 0,
 		.nonblocking	= 1,
 		.range_cyclic	= 1,
@@ -622,7 +622,7 @@ static void wb_kupdate(unsigned long arg)
 		.range_cyclic	= 1,
 	};
 
-	sync_supers();
+	sync_supers();//同步超级块
 
 	oldest_jif = jiffies - dirty_expire_interval;
 	start_jif = jiffies;
@@ -633,9 +633,9 @@ static void wb_kupdate(unsigned long arg)
 	while (nr_to_write > 0) {
 		wbc.encountered_congestion = 0;
 		wbc.nr_to_write = MAX_WRITEBACK_PAGES;
-		writeback_inodes(&wbc);
+		writeback_inodes(&wbc);//inode同步
 		if (wbc.nr_to_write > 0) {
-			if (wbc.encountered_congestion)
+			if (wbc.encountered_congestion)//拥塞
 				congestion_wait(WRITE, HZ/10);
 			else
 				break;	/* All the old data is written */

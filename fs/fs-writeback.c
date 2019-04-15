@@ -204,8 +204,8 @@ static void move_expired_inodes(struct list_head *delaying_queue,
 static void queue_io(struct super_block *sb,
 				unsigned long *older_than_this)
 {
-	list_splice_init(&sb->s_more_io, sb->s_io.prev);
-	move_expired_inodes(&sb->s_dirty, &sb->s_io, older_than_this);
+	list_splice_init(&sb->s_more_io, sb->s_io.prev);//将s_more_io链表并入s_io
+	move_expired_inodes(&sb->s_dirty, &sb->s_io, older_than_this);//将older_than_this的s_dirty链表内成员也加入s_io链表 
 }
 
 int sb_has_dirty_inodes(struct super_block *sb)
@@ -243,16 +243,16 @@ __sync_single_inode(struct inode *inode, struct writeback_control *wbc)
 
 	spin_unlock(&inode_lock);
 
-	ret = do_writepages(mapping, wbc);
+	ret = do_writepages(mapping, wbc);//同步inode相关数据，即inode相关地址空间中的脏页
 
 	/* Don't write the inode if only I_DIRTY_PAGES was set */
 	if (dirty & (I_DIRTY_SYNC | I_DIRTY_DATASYNC)) {
-		int err = write_inode(inode, wait);
+		int err = write_inode(inode, wait);//同步inode元数据 
 		if (ret == 0)
 			ret = err;
 	}
 
-	if (wait) {
+	if (wait) {//数据完整性回写的话，要等待写完成
 		int err = filemap_fdatawait(mapping);
 		if (ret == 0)
 			ret = err;
@@ -262,7 +262,7 @@ __sync_single_inode(struct inode *inode, struct writeback_control *wbc)
 	inode->i_state &= ~I_SYNC;
 	if (!(inode->i_state & I_FREEING)) {
 		if (!(inode->i_state & I_DIRTY) &&
-		    mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+		    mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {//地址空间中的脏页并没有完全写会
 			/*
 			 * We didn't write back all the pages.  nfs_writepages()
 			 * sometimes bales out without doing anything. Redirty
@@ -277,7 +277,7 @@ __sync_single_inode(struct inode *inode, struct writeback_control *wbc)
 			 * reasons for doing it this way, and I'd rather not
 			 * muck with it at present.
 			 */
-			if (wbc->for_kupdate) {
+			if (wbc->for_kupdate) {//wb_kupdate中调用的，置于s_more_io链表，在后续的同步操作中处理
 				/*
 				 * For the kupdate function we move the inode
 				 * to s_more_io so it will get more writeout as
@@ -285,7 +285,7 @@ __sync_single_inode(struct inode *inode, struct writeback_control *wbc)
 				 */
 				inode->i_state |= I_DIRTY_PAGES;
 				requeue_io(inode);
-			} else {
+			} else {//不是wb_kupdate中调用，则置于dirty链表，这是一个大的脏文件，避免因为它导致其他待处理任务长时间等待
 				/*
 				 * Otherwise fully redirty the inode so that
 				 * other inodes on this superblock will get some
@@ -296,7 +296,8 @@ __sync_single_inode(struct inode *inode, struct writeback_control *wbc)
 				inode->i_state |= I_DIRTY_PAGES;
 				redirty_tail(inode);
 			}
-		} else if (inode->i_state & I_DIRTY) {
+		} 
+        else if (inode->i_state & I_DIRTY) {//inode数据在回写期间再次变脏了，应加入s_dirty链表
 			/*
 			 * Someone redirtied the inode while were writing back
 			 * the pages.
@@ -333,7 +334,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
 	else
 		WARN_ON(inode->i_state & I_WILL_FREE);
 
-	if ((wbc->sync_mode != WB_SYNC_ALL) && (inode->i_state & I_SYNC)) {
+	if ((wbc->sync_mode != WB_SYNC_ALL) && (inode->i_state & I_SYNC)) {//非完整性回写，且正在同步
 		struct address_space *mapping = inode->i_mapping;
 		int ret;
 
@@ -351,7 +352,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
 		 * we can at least start some of the data writeout..
 		 */
 		spin_unlock(&inode_lock);
-		ret = do_writepages(mapping, wbc);
+		ret = do_writepages(mapping, wbc);//将与该inode有关的数据写出????  不是锁定了吗怎么写????
 		spin_lock(&inode_lock);
 		return ret;
 	}
@@ -359,7 +360,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
 	/*
 	 * It's a data-integrity sync.  We must wait.
 	 */
-	if (inode->i_state & I_SYNC) {
+	if (inode->i_state & I_SYNC) {//是数据完整性回写，且正在由内核其他部分进行同步
 		DEFINE_WAIT_BIT(wq, &inode->i_state, __I_SYNC);
 
 		wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
@@ -409,7 +410,7 @@ sync_sb_inodes(struct super_block *sb, struct writeback_control *wbc)
 	const unsigned long start = jiffies;	/* livelock avoidance */
 
 	if (!wbc->for_kupdate || list_empty(&sb->s_io))
-		queue_io(sb, wbc->older_than_this);
+		queue_io(sb, wbc->older_than_this);//将s_more_io和符合条件的s_dirty成员加入s_io链表
 
 	while (!list_empty(&sb->s_io)) {
 		struct inode *inode = list_entry(sb->s_io.prev,
@@ -435,11 +436,11 @@ sync_sb_inodes(struct super_block *sb, struct writeback_control *wbc)
 			break;
 		}
 
-		if (wbc->nonblocking && bdi_write_congested(bdi)) {
+		if (wbc->nonblocking && bdi_write_congested(bdi)) { //bdi->state
 			wbc->encountered_congestion = 1;
-			if (!sb_is_blkdev_sb(sb))
+			if (!sb_is_blkdev_sb(sb))//如果当前inode不属于一个块设备，如源自一个普通文件系统，此时可以假定其他s_io内的inode也由同一队列处理，该队列已经拥塞，因此放弃循环
 				break;		/* Skip a congested fs */
-			requeue_io(inode);
+			requeue_io(inode);//是块设备的话，将inode从s_io移至s_more_io链表，继续处理s_io内的inode，因为有时会有多个物理设备合并为一个的逻辑设备，这时s_io其他的inode所在的块设备可能没有拥塞，可以执行回写
 			continue;		/* Skip a congested blockdev */
 		}
 
@@ -451,7 +452,7 @@ sync_sb_inodes(struct super_block *sb, struct writeback_control *wbc)
 		}
 
 		/* Was this inode dirtied after sync_sb_inodes was called? */
-		if (time_after(inode->dirtied_when, start))
+		if (time_after(inode->dirtied_when, start))//该inode变脏 是在sync_sb_inodes调用之后(即执行过程中)
 			break;
 
 		/* Is another pdflush already flushing this queue? */
@@ -460,20 +461,20 @@ sync_sb_inodes(struct super_block *sb, struct writeback_control *wbc)
 
 		BUG_ON(inode->i_state & I_FREEING);
 		__iget(inode);
-		pages_skipped = wbc->pages_skipped;
-		__writeback_single_inode(inode, wbc);
+		pages_skipped = wbc->pages_skipped;//未回写成功的页的数目
+		__writeback_single_inode(inode, wbc);//回写单个inode
 		if (wbc->sync_mode == WB_SYNC_HOLD) {
 			inode->dirtied_when = jiffies;
-			list_move(&inode->i_list, &sb->s_dirty);
+			list_move(&inode->i_list, &sb->s_dirty);//WB_SYNC_HOLD  放回dirty链表，以供第二遍处理(sys_sync--> sync_inodes(0) 和 sync_inodes(1) )
 		}
 		if (current_is_pdflush())
 			writeback_release(bdi);
-		if (wbc->pages_skipped != pages_skipped) {
+		if (wbc->pages_skipped != pages_skipped) {//未回写成功的页的数目变化了，
 			/*
 			 * writeback is not making progress due to locked
 			 * buffers.  Skip this inode for now.
 			 */
-			redirty_tail(inode);
+			redirty_tail(inode);//将该inode再次移回s_dirty链表，如果该inode的dirtied_when比dirty链表的第一个成员早，需更新dirtied_when
 		}
 		spin_unlock(&inode_lock);
 		iput(inode);
@@ -611,15 +612,15 @@ static void __sync_inodes(int wait)
 	spin_lock(&sb_lock);
 restart:
 	list_for_each_entry(sb, &super_blocks, s_list) {
-		if (sb->s_syncing)
+		if (sb->s_syncing)//该超级块正在由内核的另一部分进行同步
 			continue;
 		sb->s_syncing = 1;
 		sb->s_count++;
 		spin_unlock(&sb_lock);
 		down_read(&sb->s_umount);
 		if (sb->s_root) {
-			sync_inodes_sb(sb, wait);
-			sync_blockdev(sb->s_bdev);
+			sync_inodes_sb(sb, wait);//同步该超级块相关的所以脏inode
+			sync_blockdev(sb->s_bdev);//大多数底层同步都是只是将缓冲区或页标记为脏，并不进行实际的回写，因此此处再调用sync_blockdev，来同步块设备上的所以映射，确保数据实际写回到块设备
 		}
 		up_read(&sb->s_umount);
 		spin_lock(&sb_lock);

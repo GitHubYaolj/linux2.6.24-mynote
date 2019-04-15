@@ -103,7 +103,7 @@ static int __pdflush(struct pdflush_work *my_work)
 		struct pdflush_work *pdf;
 
 		set_current_state(TASK_INTERRUPTIBLE);
-		list_move(&my_work->list, &pdflush_list);
+		list_move(&my_work->list, &pdflush_list); //将my_work->list加入pdflush_list
 		my_work->when_i_went_to_sleep = jiffies;
 		spin_unlock_irq(&pdflush_lock);
 		schedule();
@@ -132,7 +132,7 @@ static int __pdflush(struct pdflush_work *my_work)
 		 */
 		if (jiffies - last_empty_jifs > 1 * HZ) {
 			/* unlocked list_empty() test is OK here */
-			if (list_empty(&pdflush_list)) {
+			if (list_empty(&pdflush_list)) { //pdflush_list empty 超过1s，即1s内都没有任务执行完后加入pdflush_int链表，即所有任务都比较耗时，这需要增加一个线程任务
 				/* unlocked test is OK here */
 				if (nr_pdflush_threads < MAX_PDFLUSH_THREADS)
 					start_one_pdflush_thread();
@@ -151,7 +151,7 @@ static int __pdflush(struct pdflush_work *my_work)
 		if (nr_pdflush_threads <= MIN_PDFLUSH_THREADS)
 			continue;
 		pdf = list_entry(pdflush_list.prev, struct pdflush_work, list);
-		if (jiffies - pdf->when_i_went_to_sleep > 1 * HZ) {
+		if (jiffies - pdf->when_i_went_to_sleep > 1 * HZ) {//休眠时间超过了1s，才被安排任务，任务执行完后，退出该线程
 			/* Limit exit rate */
 			pdf->when_i_went_to_sleep = jiffies;
 			break;					/* exeunt */
@@ -213,7 +213,7 @@ int pdflush_operation(void (*fn)(unsigned long), unsigned long arg0)
 		struct pdflush_work *pdf;
 
 		pdf = list_entry(pdflush_list.next, struct pdflush_work, list);
-		list_del_init(&pdf->list);
+		list_del_init(&pdf->list);//将pdf->list从pdflush_list中移除
 		if (list_empty(&pdflush_list))
 			last_empty_jifs = jiffies;
 		pdf->fn = fn;
