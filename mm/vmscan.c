@@ -425,7 +425,7 @@ int remove_mapping(struct address_space *mapping, struct page *page)
 		return 1;
 	}
 
-	__remove_from_page_cache(page);//将页从页缓存删除
+	__remove_from_page_cache(page);//如果页不在交换缓存，那就在页缓存中， 将页从页缓存删除
 	write_unlock_irq(&mapping->tree_lock);
 	__put_page(page);
 	return 1;
@@ -643,7 +643,7 @@ static int __isolate_lru_page(struct page *page, int mode)
 		return ret;
 
 	ret = -EBUSY;
-	if (likely(get_page_unless_zero(page))) {
+	if (likely(get_page_unless_zero(page))) {//增加 page->_count计数,后面的页向量表处理release_pages会递减该计数
 		/*
 		 * Be careful not to clear PageLRU until after we're
 		 * sure the page is not being freed elsewhere -- the

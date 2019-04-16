@@ -3059,7 +3059,7 @@ int try_to_free_buffers(struct page *page)
 		return 0;
 
 	if (mapping == NULL) {		/* can this still happen? */
-		ret = drop_buffers(page, &buffers_to_free);
+		ret = drop_buffers(page, &buffers_to_free);//找到该page对应的buffer_head
 		goto out;
 	}
 

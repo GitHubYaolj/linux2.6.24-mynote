@@ -314,7 +314,7 @@ void release_pages(struct page **pages, int nr, int cold)
 			continue;
 		}
 
-		if (!put_page_testzero(page))
+		if (!put_page_testzero(page))//递减page->_count计数，前面__isolate_lru_page会增加计数  return true if the refcount fell to zero (the page has no users)
 			continue;
 
 		if (PageLRU(page)) {
