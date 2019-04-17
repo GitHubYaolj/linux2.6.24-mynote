@@ -932,11 +932,11 @@ static struct vfsmount *fs_set_subtype(struct vfsmount *mnt, const char *fstype)
 struct vfsmount *
 do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 {
-	struct file_system_type *type = get_fs_type(fstype);
+	struct file_system_type *type = get_fs_type(fstype);//扫描已注册文件系统链表，根据名字找到对应项
 	struct vfsmount *mnt;
 	if (!type)
 		return ERR_PTR(-ENODEV);
-	mnt = vfs_kern_mount(type, flags, name, data);
+	mnt = vfs_kern_mount(type, flags, name, data);//根据特定文件系统的get_sb读取超级块
 	if (!IS_ERR(mnt) && (type->fs_flags & FS_HAS_SUBTYPE) &&
 	    !mnt->mnt_sb->s_subtype)
 		mnt = fs_set_subtype(mnt, fstype);

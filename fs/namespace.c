@@ -609,14 +609,14 @@ static int do_umount(struct vfsmount *mnt, int flags)
 	retval = -EBUSY;
 	if (flags & MNT_DETACH || !propagate_mount_busy(mnt, 2)) {
 		if (!list_empty(&mnt->mnt_list))
-			umount_tree(mnt, 1, &umount_list);
+			umount_tree(mnt, 1, &umount_list);//p->mnt_mountpoint->d_mounted--
 		retval = 0;
 	}
 	spin_unlock(&vfsmount_lock);
 	if (retval)
 		security_sb_umount_busy(mnt);
 	up_write(&namespace_sem);
-	release_mounts(&umount_list);
+	release_mounts(&umount_list);//使用mnt_mountpoint和mnt_parent恢复挂载之前的状态
 	return retval;
 }
 
@@ -633,7 +633,7 @@ asmlinkage long sys_umount(char __user * name, int flags)
 	struct nameidata nd;
 	int retval;
 
-	retval = __user_walk(name, LOOKUP_FOLLOW, &nd);
+	retval = __user_walk(name, LOOKUP_FOLLOW, &nd);//找到装载点的vfsmonut和dentry，二者包装在nameidata
 	if (retval)
 		goto out;
 	retval = -EINVAL;
@@ -830,11 +830,11 @@ void drop_collected_mounts(struct vfsmount *mnt)
  * in allocations.
  */
 static int attach_recursive_mnt(struct vfsmount *source_mnt,
-			struct nameidata *nd, struct nameidata *parent_nd)
+			struct nameidata *nd, struct nameidata *parent_nd)//(newmnt, nd, null)
 {
 	LIST_HEAD(tree_list);
-	struct vfsmount *dest_mnt = nd->mnt;
-	struct dentry *dest_dentry = nd->dentry;
+	struct vfsmount *dest_mnt = nd->mnt;//挂节点  父
+	struct dentry *dest_dentry = nd->dentry;//挂节点 父
 	struct vfsmount *child, *p;
 
 	if (propagate_mnt(dest_mnt, dest_dentry, source_mnt, &tree_list))
@@ -851,8 +851,8 @@ static int attach_recursive_mnt(struct vfsmount *source_mnt,
 		attach_mnt(source_mnt, nd);
 		touch_mnt_namespace(current->nsproxy->mnt_ns);
 	} else {
-		mnt_set_mountpoint(dest_mnt, dest_dentry, source_mnt);
-		commit_tree(source_mnt);
+		mnt_set_mountpoint(dest_mnt, dest_dentry, source_mnt);//安排新的vfsmount的mnt_parent(父的vfsmount)和mnt_mountpoint(挂节点在父下的dentry)
+		commit_tree(source_mnt);//新vfsmount加入mount_hashtable 和 父vfsmount->mnt_mounts链表
 	}
 
 	list_for_each_entry_safe(child, p, &tree_list, mnt_hash) {
@@ -863,7 +863,7 @@ static int attach_recursive_mnt(struct vfsmount *source_mnt,
 	return 0;
 }
 
-static int graft_tree(struct vfsmount *mnt, struct nameidata *nd)
+static int graft_tree(struct vfsmount *mnt, struct nameidata *nd)//(newmnt, nd)
 {
 	int err;
 	if (mnt->mnt_sb->s_flags & MS_NOUSER)
@@ -910,7 +910,7 @@ static int do_change_type(struct nameidata *nd, int flag)
 	down_write(&namespace_sem);
 	spin_lock(&vfsmount_lock);
 	for (m = mnt; m; m = (recurse ? next_mnt(m, mnt) : NULL))
-		change_mnt_propagation(m, type);
+		change_mnt_propagation(m, type);//给vfsmount设置适当的传播标志
 	spin_unlock(&vfsmount_lock);
 	up_write(&namespace_sem);
 	return 0;

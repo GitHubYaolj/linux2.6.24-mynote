@@ -902,15 +902,15 @@ find_page:
 		if (!page) {
 			page_cache_sync_readahead(mapping,
 					ra, filp,
-					index, last_index - index);
+					index, last_index - index);//发出一个同步预读请求
 			page = find_get_page(mapping, index);
 			if (unlikely(page == NULL))
 				goto no_cached_page;
 		}
-		if (PageReadahead(page)) {
+		if (PageReadahead(page)) {//预读标志
 			page_cache_async_readahead(mapping,
 					ra, filp, page,
-					index, last_index - index);
+					index, last_index - index);//发出一个异步预读请求
 		}
 		if (!PageUptodate(page))
 			goto page_not_up_to_date;
@@ -1170,7 +1170,7 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
 		return retval;
 
 	/* coalesce the iovecs and go direct-to-BIO for O_DIRECT */
-	if (filp->f_flags & O_DIRECT) {
+	if (filp->f_flags & O_DIRECT) {//设备直接读取，不使用页缓存
 		loff_t size;
 		struct address_space *mapping;
 		struct inode *inode;
@@ -1204,7 +1204,7 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
 			if (desc.count == 0)
 				continue;
 			desc.error = 0;
-			do_generic_file_read(filp,ppos,&desc,file_read_actor);
+			do_generic_file_read(filp,ppos,&desc,file_read_actor);//对address_mapping的读操作
 			retval += desc.written;
 			if (desc.error) {
 				retval = retval ?: desc.error;
@@ -1315,7 +1315,7 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 		return VM_FAULT_SIGBUS;
 
 	/* If we don't want any read-ahead, don't bother */
-	if (VM_RandomReadHint(vma))
+	if (VM_RandomReadHint(vma))//判断是不是随机访问， 随机访问，顺序不可测，不预读
 		goto no_cached_page;
 
 	/*
@@ -1340,7 +1340,7 @@ retry_find:
 		}
 	}
 
-	if (!page) {
+	if (!page) {//需要调用通用预读机制
 		unsigned long ra_pages;
 
 		ra->mmap_miss++;

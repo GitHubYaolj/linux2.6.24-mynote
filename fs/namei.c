@@ -693,7 +693,7 @@ static int __follow_mount(struct path *path)
 {
 	int res = 0;
 	while (d_mountpoint(path->dentry)) {
-		struct vfsmount *mounted = lookup_mnt(path->mnt, path->dentry);
+		struct vfsmount *mounted = lookup_mnt(path->mnt, path->dentry);//查找当前目录是不是一个挂载点
 		if (!mounted)
 			break;
 		dput(path->dentry);
@@ -747,19 +747,19 @@ static __always_inline void follow_dotdot(struct nameidata *nd)
 
                 read_lock(&fs->lock);
 		if (nd->dentry == fs->root &&
-		    nd->mnt == fs->rootmnt) {
+		    nd->mnt == fs->rootmnt) {//当前目录已经是进程的根目录
                         read_unlock(&fs->lock);
 			break;
 		}
                 read_unlock(&fs->lock);
 		spin_lock(&dcache_lock);
-		if (nd->dentry != nd->mnt->mnt_root) {
+		if (nd->dentry != nd->mnt->mnt_root) {//当前目录不是一个已装载文件系统的根目录,即不是装载点
 			nd->dentry = dget(nd->dentry->d_parent);
 			spin_unlock(&dcache_lock);
 			dput(old);
 			break;
 		}
-		spin_unlock(&dcache_lock);
+		spin_unlock(&dcache_lock);//当前目录是一个装载点
 		spin_lock(&vfsmount_lock);
 		parent = nd->mnt->mnt_parent;
 		if (parent == nd->mnt) {
@@ -785,7 +785,7 @@ static int do_lookup(struct nameidata *nd, struct qstr *name,
 		     struct path *path)
 {
 	struct vfsmount *mnt = nd->mnt;
-	struct dentry *dentry = __d_lookup(nd->dentry, name);
+	struct dentry *dentry = __d_lookup(nd->dentry, name);//首先在dentry目录缓存项中查找
 
 	if (!dentry)
 		goto need_lookup;
@@ -798,7 +798,7 @@ done:
 	return 0;
 
 need_lookup:
-	dentry = real_lookup(nd->dentry, name, nd);
+	dentry = real_lookup(nd->dentry, name, nd);//在底层文件系统中发起一个查找操作
 	if (IS_ERR(dentry))
 		goto fail;
 	goto done;
@@ -846,7 +846,7 @@ static fastcall int __link_path_walk(const char * name, struct nameidata *nd)
 		unsigned int c;
 
 		nd->flags |= LOOKUP_CONTINUE;
-		err = exec_permission_lite(inode, nd);
+		err = exec_permission_lite(inode, nd);//判断当前进程是否允许进入该目录
 		if (err == -EAGAIN)
 			err = vfs_permission(nd, MAY_EXEC);
  		if (err)
@@ -862,7 +862,7 @@ static fastcall int __link_path_walk(const char * name, struct nameidata *nd)
 			c = *(const unsigned char *)name;
 		} while (c && (c != '/'));
 		this.len = name - (const char *) this.name;
-		this.hash = end_name_hash(hash);
+		this.hash = end_name_hash(hash);//这部分得到一个路径分量，并计算好了该路径分量的长度和散列值
 
 		/* remove trailing slashes? */
 		if (!c)
@@ -882,7 +882,7 @@ static fastcall int __link_path_walk(const char * name, struct nameidata *nd)
 			case 2:	
 				if (this.name[1] != '.')
 					break;
-				follow_dotdot(nd);
+				follow_dotdot(nd); //如果是..
 				inode = nd->dentry->d_inode;
 				/* fallthrough */
 			case 1:
@@ -898,7 +898,7 @@ static fastcall int __link_path_walk(const char * name, struct nameidata *nd)
 				break;
 		}
 		/* This does the actual lookups.. */
-		err = do_lookup(nd, &this, &next);
+		err = do_lookup(nd, &this, &next);//找到this对应的目录
 		if (err)
 			break;
 
@@ -924,7 +924,7 @@ static fastcall int __link_path_walk(const char * name, struct nameidata *nd)
 		} else
 			path_to_nameidata(&next, nd);
 		err = -ENOTDIR; 
-		if (!inode->i_op->lookup)
+		if (!inode->i_op->lookup)//用于表示软连接的inode，才会定义lookup函数，否则该函数为null
 			break;
 		continue;
 		/* here ends the main loop */
@@ -1141,7 +1141,8 @@ static int fastcall do_path_lookup(int dfd, const char *name,
 		nd->mnt = mntget(fs->rootmnt);
 		nd->dentry = dget(fs->root);
 		read_unlock(&fs->lock);
-	} else if (dfd == AT_FDCWD) {
+	} 
+    else if (dfd == AT_FDCWD) {
 		read_lock(&fs->lock);
 		nd->mnt = mntget(fs->pwdmnt);
 		nd->dentry = dget(fs->pwd);
@@ -1184,7 +1185,7 @@ fput_fail:
 }
 
 int fastcall path_lookup(const char *name, unsigned int flags,
-			struct nameidata *nd)
+			struct nameidata *nd)//nameidata用作临时结果暂存器
 {
 	return do_path_lookup(AT_FDCWD, name, flags, nd);
 }

@@ -589,16 +589,16 @@ static inline int mapping_writably_mapped(struct address_space *mapping)
 #endif
 
 struct inode {
-	struct hlist_node	i_hash;
-	struct list_head	i_list;
-	struct list_head	i_sb_list;
+	struct hlist_node	i_hash;//用于inode_hashtable哈希表的溢出链表，即存在多个inode计算出的哈希值相同的情况时
+	struct list_head	i_list;//用于将inode连入3种链表之一， inode_unused  indoe_in_use  sb->s_dirty
+	struct list_head	i_sb_list;//链接至sb_s_inodes
 	struct list_head	i_dentry;
 	unsigned long		i_ino;
 	atomic_t		i_count;
 	unsigned int		i_nlink;
 	uid_t			i_uid;
 	gid_t			i_gid;
-	dev_t			i_rdev;
+	dev_t			i_rdev;//inode表示设备文件时，需要i_rdev，表示目标设备,如struct block_device的一个实例
 	unsigned long		i_version;
 	loff_t			i_size;
 #ifdef __NEED_I_SIZE_ORDERED
@@ -623,9 +623,9 @@ struct inode {
 #ifdef CONFIG_QUOTA
 	struct dquot		*i_dquot[MAXQUOTAS];
 #endif
-	struct list_head	i_devices;
-	union {
-		struct pipe_inode_info	*i_pipe;
+	struct list_head	i_devices;//通常情况下，每个设备一个设备文件就足够，但是，有些需要多个设备文件，这就需要i_devices链表，把这些设备的inode链接起来
+	union {//inode表示特殊设备文件时，区别于上面的i_rdev
+		struct pipe_inode_info	*i_pipe;//管道
 		struct block_device	*i_bdev;
 		struct cdev		*i_cdev;
 	};
@@ -793,7 +793,7 @@ struct file {
 	loff_t			f_pos;
 	struct fown_struct	f_owner;
 	unsigned int		f_uid, f_gid;
-	struct file_ra_state	f_ra;
+	struct file_ra_state	f_ra;//read ahead
 
 	u64			f_version;
 #ifdef CONFIG_SECURITY
@@ -977,20 +977,20 @@ extern spinlock_t sb_lock;
 #define sb_entry(list)	list_entry((list), struct super_block, s_list)
 #define S_BIAS (1<<30)
 struct super_block {
-	struct list_head	s_list;		/* Keep this first */
-	dev_t			s_dev;		/* search index; _not_ kdev_t */
-	unsigned long		s_blocksize;
+	struct list_head	s_list;		/* Keep this first 系统中所有超级块的链表，表头为super_blocks*/
+	dev_t			s_dev;		/* search index; _not_ kdev_t 文件系统数据所在块设备，设备编号*/
+	unsigned long		s_blocksize; //文件系统的块长度
 	unsigned char		s_blocksize_bits;
 	unsigned char		s_dirt;
 	unsigned long long	s_maxbytes;	/* Max file size */
 	struct file_system_type	*s_type;
-	const struct super_operations	*s_op;
+	const struct super_operations	*s_op;//包括从底层文件系统获取inode数据的方法
 	struct dquot_operations	*dq_op;
  	struct quotactl_ops	*s_qcop;
 	const struct export_operations *s_export_op;
 	unsigned long		s_flags;
 	unsigned long		s_magic;
-	struct dentry		*s_root;
+	struct dentry		*s_root;//全局根目录的dentry  检查文件系统是否已经装载
 	struct rw_semaphore	s_umount;
 	struct mutex		s_lock;
 	int			s_count;
@@ -1007,11 +1007,11 @@ struct super_block {
 	struct list_head	s_io;		/* parked for writeback */
 	struct list_head	s_more_io;	/* parked for more writeback */
 	struct hlist_head	s_anon;		/* anonymous dentries for (nfs) exporting */
-	struct list_head	s_files;
+	struct list_head	s_files;//列出了该超级块表示的文件系统上所有打开的文件，卸载文件系统时参考
 
-	struct block_device	*s_bdev;
+	struct block_device	*s_bdev;//文件系统数据所在块设备
 	struct mtd_info		*s_mtd;
-	struct list_head	s_instances;
+	struct list_head	s_instances;//系统中同类型的文件系统的所有超级块链表，s_instances是元素，表头为file_system_type->fs_supers
 	struct quota_info	s_dquot;	/* Diskquota specific options */
 
 	int			s_frozen;
@@ -1214,7 +1214,7 @@ struct inode_operations {
 	int (*removexattr) (struct dentry *, const char *);
 	void (*truncate_range)(struct inode *, loff_t, loff_t);
 	long (*fallocate)(struct inode *inode, int mode, loff_t offset,
-			  loff_t len);
+			  loff_t len);//对文件预先分配空间
 };
 
 struct seq_file;
@@ -1245,14 +1245,14 @@ struct super_operations {
 	int (*write_inode) (struct inode *, int);
 	void (*put_inode) (struct inode *);
 	void (*drop_inode) (struct inode *);
-	void (*delete_inode) (struct inode *);
+	void (*delete_inode) (struct inode *);//将inode从内存和底层存储介质删除，会移除指向存储数据块的指针，数据块里的内存并不删除
 	void (*put_super) (struct super_block *);
-	void (*write_super) (struct super_block *);
+	void (*write_super) (struct super_block *);//将超级块写入存储介质
 	int (*sync_fs)(struct super_block *sb, int wait);
 	void (*write_super_lockfs) (struct super_block *);
 	void (*unlockfs) (struct super_block *);
 	int (*statfs) (struct dentry *, struct kstatfs *);
-	int (*remount_fs) (struct super_block *, int *, char *);
+	int (*remount_fs) (struct super_block *, int *, char *);//重新装载一个已经装载的文件系统如rootfs
 	void (*clear_inode) (struct inode *);
 	void (*umount_begin) (struct vfsmount *, int);
 

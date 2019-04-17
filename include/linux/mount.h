@@ -35,17 +35,17 @@ struct mnt_namespace;
 #define MNT_UNBINDABLE	0x2000	/* if the vfsmount is a unbindable mount */
 #define MNT_PNODE_MASK	0x3000	/* propagation flag mask */
 
-struct vfsmount {
+struct vfsmount {//每个装载的文件系统，对应一个vfs_mount 
 	struct list_head mnt_hash;
-	struct vfsmount *mnt_parent;	/* fs we are mounted on */
-	struct dentry *mnt_mountpoint;	/* dentry of mountpoint */
-	struct dentry *mnt_root;	/* root of the mounted tree */
+	struct vfsmount *mnt_parent;	/* fs we are mounted on 装载点所在的父文件系统*/
+	struct dentry *mnt_mountpoint;	/* dentry of mountpoint 装载点在父文件系统的dentry*/
+	struct dentry *mnt_root;	/* root of the mounted tree 当前文件系统根目录的dentry*/
 	struct super_block *mnt_sb;	/* pointer to superblock */
-	struct list_head mnt_mounts;	/* list of children, anchored here */
-	struct list_head mnt_child;	/* and going through their mnt_child */
+	struct list_head mnt_mounts;	/* list of children, anchored here 当前文件系统的子文件系统链表*/
+	struct list_head mnt_child;	/* and going through their mnt_child 用作mnt_mounts的链表元素*/
 	int mnt_flags;
 	/* 4 bytes hole on 64bits arches */
-	char *mnt_devname;		/* Name of device e.g. /dev/dsk/hda1 */
+	char *mnt_devname;		/* Name of device e.g. /dev/dsk/hda1 设备名称*/
 	struct list_head mnt_list;
 	struct list_head mnt_expire;	/* link in fs-specific expiry list */
 	struct list_head mnt_share;	/* circular list of shared mounts */

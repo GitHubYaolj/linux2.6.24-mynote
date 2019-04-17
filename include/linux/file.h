@@ -38,7 +38,7 @@ struct fdtable {
 /*
  * Open file table structure
  */
-struct files_struct {
+struct files_struct {  //扩展时用expand_fdtable
   /*
    * read mostly part
    */
@@ -49,7 +49,7 @@ struct files_struct {
    * written part on a separate cache line in SMP
    */
 	spinlock_t file_lock ____cacheline_aligned_in_smp;
-	int next_fd;
+	int next_fd;//下一次打开新文件时使用的文件描述符
 	struct embedded_fd_set close_on_exec_init;
 	struct embedded_fd_set open_fds_init;
 	struct file * fd_array[NR_OPEN_DEFAULT];

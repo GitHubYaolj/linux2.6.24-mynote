@@ -14,10 +14,10 @@ struct open_intent {
 
 enum { MAX_NESTED_LINKS = 8 };
 
-struct nameidata {
+struct nameidata {//向查找函数传递参数，并保存查找结果
 	struct dentry	*dentry;
-	struct vfsmount *mnt;
-	struct qstr	last;
+	struct vfsmount *mnt;//dentry和mnt保存找到的文件系统项
+	struct qstr	last;//查找的名称
 	unsigned int	flags;
 	int		last_type;
 	unsigned	depth;

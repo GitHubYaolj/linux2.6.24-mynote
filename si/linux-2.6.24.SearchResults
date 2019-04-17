@@ -1,10 +1,20 @@
----- do_page_fault Matches (9 in 9 files) ----
-entry_64.S (arch\x86\kernel):	errorentry do_page_fault
-Fault_32.c (arch\x86\mm):fastcall void __kprobes do_page_fault(struct pt_regs *regs,
-Fault_64.c (arch\x86\mm):asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
-Filemap.c (mm): *    ->mmap_sem		(fault_in_pages_readable->do_page_fault)
-Highmem_32.c (arch\x86\mm):	/* even !CONFIG_PREEMPT needs this, for in_atomic in do_page_fault */
-Hugetlb.c (mm): * hugegpage VMA.  do_page_fault() is supposed to trap this, so BUG is we get
-Kprobes_32.c (arch\x86\kernel):		 * Let do_page_fault() fix it.
-Kprobes_64.c (arch\x86\kernel):		 * Let do_page_fault() fix it.
-Uaccess.h (include\linux): * do_page_fault() doesn't attempt to take mmap_sem.  This makes
+---- inode_hashtable Matches (13 in 1 files) ----
+Inode.c (fs):static struct hlist_head *inode_hashtable __read_mostly;
+Inode.c (fs):		head = inode_hashtable + hash(sb, res);
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, ino);
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, ino);
+Inode.c (fs): *		inode_hashtable.
+Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(inode->i_sb, hashval);
+Inode.c (fs):	inode_hashtable =
+Inode.c (fs):		INIT_HLIST_HEAD(&inode_hashtable[loop]);
+Inode.c (fs):	inode_hashtable =
+Inode.c (fs):		INIT_HLIST_HEAD(&inode_hashtable[loop]);
+---- inode_hashtable Search Errors Encountered (4) ----
+The following 4 files could not be processed:
+E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\kernel\cgroup.c : File could not be opened.
+E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\asm-arm\arch-ixp4xx\ixp4xx-regs.h : File could not be opened.
+E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\linux\msdos_fs.h : File could not be opened.
+E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\linux\neighbour.h : File could not be opened.

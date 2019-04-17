@@ -1041,7 +1041,7 @@ struct task_struct {
 				       it with task_lock())
 				     - initialized normally by flush_old_exec */
 /* file system info */
-	int link_count, total_link_count;
+	int link_count, total_link_count;//查找环形链表时防止无线循环
 #ifdef CONFIG_SYSVIPC
 /* ipc stuff */
 	struct sysv_sem sysvsem;
