@@ -386,7 +386,7 @@ struct ext2_dir_entry_2 * ext2_find_entry (struct inode * dir,
 					ext2_put_page(page);
 					goto out;
 				}
-				if (ext2_match (namelen, name, de))
+				if (ext2_match (namelen, name, de))//文件名匹配
 					goto found;
 				de = ext2_next_entry(de);
 			}
@@ -608,7 +608,7 @@ out:
 /*
  * Set the first fragment of directory.
  */
-int ext2_make_empty(struct inode *inode, struct inode *parent)
+int ext2_make_empty(struct inode *inode, struct inode *parent)//生成 .和.. 目录项，并写入数据块中
 {
 	struct address_space *mapping = inode->i_mapping;
 	struct page *page = grab_cache_page(mapping, 0);

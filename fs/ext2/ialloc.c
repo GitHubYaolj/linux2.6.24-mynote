@@ -282,13 +282,13 @@ static int find_group_orlov(struct super_block *sb, struct inode *parent)
 	int group = -1, i;
 	struct ext2_group_desc *desc;
 
-	freei = percpu_counter_read_positive(&sbi->s_freeinodes_counter);
+	freei = percpu_counter_read_positive(&sbi->s_freeinodes_counter);//空闲inode数目
 	avefreei = freei / ngroups;
-	free_blocks = percpu_counter_read_positive(&sbi->s_freeblocks_counter);
+	free_blocks = percpu_counter_read_positive(&sbi->s_freeblocks_counter);//空闲块数目
 	avefreeb = free_blocks / ngroups;
 	ndirs = percpu_counter_read_positive(&sbi->s_dirs_counter);
 
-	if ((parent == sb->s_root->d_inode) ||
+	if ((parent == sb->s_root->d_inode)/* 父目录是根目录 */ ||
 	    (EXT2_I(parent)->i_flags & EXT2_TOPDIR_FL)) {
 		struct ext2_group_desc *best_desc = NULL;
 		int best_ndir = inodes_per_group;
@@ -324,9 +324,9 @@ static int find_group_orlov(struct super_block *sb, struct inode *parent)
 
 	blocks_per_dir = (le32_to_cpu(es->s_blocks_count)-free_blocks) / ndirs;
 
-	max_dirs = ndirs / ngroups + inodes_per_group / 16;
+	max_dirs = ndirs / ngroups + inodes_per_group / 16;//一个块组中inode数目的上限
 	min_inodes = avefreei - inodes_per_group / 4;
-	min_blocks = avefreeb - EXT2_BLOCKS_PER_GROUP(sb) / 4;
+	min_blocks = avefreeb - EXT2_BLOCKS_PER_GROUP(sb) / 4;//在块组中创建新目录时，所需的空闲錓node和空闲块的最小数目
 
 	max_debt = EXT2_BLOCKS_PER_GROUP(sb) / max(blocks_per_dir, BLOCK_COST);
 	if (max_debt * INODE_COST > inodes_per_group)
@@ -459,7 +459,7 @@ struct inode *ext2_new_inode(struct inode *dir, int mode)
 	ei = EXT2_I(inode);
 	sbi = EXT2_SB(sb);
 	es = sbi->s_es;
-	if (S_ISDIR(mode)) {
+	if (S_ISDIR(mode)) {//三种策略
 		if (test_opt(sb, OLDALLOC))
 			group = find_group_dir(sb, dir);
 		else

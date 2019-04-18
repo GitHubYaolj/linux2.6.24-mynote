@@ -130,10 +130,10 @@ static inline struct ext2_sb_info *EXT2_SB(struct super_block *sb)
 /*
  * Structure of a blocks group descriptor
  */
-struct ext2_group_desc
+struct ext2_group_desc//块组的组描述符
 {
-	__le32	bg_block_bitmap;		/* Blocks bitmap block */
-	__le32	bg_inode_bitmap;		/* Inodes bitmap block */
+	__le32	bg_block_bitmap;		/* Blocks bitmap block 块位图所在块号*/
+	__le32	bg_inode_bitmap;		/* Inodes bitmap block inode位图所在块号*/
 	__le32	bg_inode_table;		/* Inodes table block */
 	__le16	bg_free_blocks_count;	/* Free blocks count */
 	__le16	bg_free_inodes_count;	/* Free inodes count */
@@ -224,7 +224,7 @@ struct ext2_inode {
 	__le32	i_mtime;	/* Modification time */
 	__le32	i_dtime;	/* Deletion Time */
 	__le16	i_gid;		/* Low 16 bits of Group Id */
-	__le16	i_links_count;	/* Links count */
+	__le16	i_links_count;	/* Links count 指向inode的硬链接的数目*/
 	__le32	i_blocks;	/* Blocks count */
 	__le32	i_flags;	/* File flags */
 	union {
@@ -238,9 +238,9 @@ struct ext2_inode {
 			__le32  m_i_reserved1;
 		} masix1;
 	} osd1;				/* OS dependent 1 */
-	__le32	i_block[EXT2_N_BLOCKS];/* Pointers to blocks */
+	__le32	i_block[EXT2_N_BLOCKS];/* Pointers to blocks 数据存储位置的块号列表*/
 	__le32	i_generation;	/* File version (for NFS) */
-	__le32	i_file_acl;	/* File ACL */
+	__le32	i_file_acl;	/* File ACL 访问控制表*/
 	__le32	i_dir_acl;	/* Directory ACL */
 	__le32	i_faddr;	/* Fragment address */
 	union {
@@ -528,7 +528,7 @@ struct ext2_dir_entry {
  * bigger than 255 chars, it's safe to reclaim the extra byte for the
  * file_type field.
  */
-struct ext2_dir_entry_2 {
+struct ext2_dir_entry_2 {//目录这种特殊文件的数据块内存储的内容
 	__le32	inode;			/* Inode number */
 	__le16	rec_len;		/* Directory entry length */
 	__u8	name_len;		/* Name length */

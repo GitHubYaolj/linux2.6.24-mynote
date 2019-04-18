@@ -607,7 +607,7 @@ static int
 ext2_try_to_allocate(struct super_block *sb, int group,
 			struct buffer_head *bitmap_bh, ext2_grpblk_t grp_goal,
 			unsigned long *count,
-			struct ext2_reserve_window *my_rsv)
+			struct ext2_reserve_window *my_rsv)// 返回申请到的块的块号，*count为该分配号后连续可用的块数
 {
 	ext2_fsblk_t group_first_block;
        	ext2_grpblk_t start, end;
@@ -650,14 +650,14 @@ repeat:
 			for (i = 0; i < 7 && grp_goal > start &&
 					!ext2_test_bit(grp_goal - 1,
 					     		bitmap_bh->b_data);
-			     		i++, grp_goal--)
+			     		i++, grp_goal--)//尽可能在grp_goal左侧分配新块， 因为 find_next_usable_block 查找位图时，会逐字节的搜索，即8个块一组
 				;
 		}
 	}
 	start = grp_goal;
 
 	if (ext2_set_bit_atomic(sb_bgl_lock(EXT2_SB(sb), group), grp_goal,
-			       				bitmap_bh->b_data)) {
+			       				bitmap_bh->b_data)) {//检查 数据块位图中grp_goal对应的位 是不是已经置位了， 如果已置位，说明已经被占用了, 需要grp_goal++，看看下一个块能不能用
 		/*
 		 * The block was allocated by another thread, or it was
 		 * allocated and then freed by another thread
@@ -762,7 +762,7 @@ static int find_next_reservable_window(
 		if (!next)
 			break;
 
-		if (cur + size <= rsv->rsv_start) {
+		if (cur + size <= rsv->rsv_start) {//在红黑树中找到一个空白区间， 即已存在的红黑树两节点间的空白区间可以放下size个块
 			/*
 			 * Found a reserveable space big enough.  We could
 			 * have a reservation across the group boundary here
@@ -796,7 +796,7 @@ static int find_next_reservable_window(
 	my_rsv->rsv_alloc_hit = 0;
 
 	if (prev != my_rsv)
-		ext2_rsv_window_add(sb, my_rsv);
+		ext2_rsv_window_add(sb, my_rsv);//插入预留区域红黑树中
 
 	return 0;
 }
@@ -1057,7 +1057,7 @@ ext2_try_to_allocate_with_rsv(struct super_block *sb, unsigned int group,
 	 * first block is a filesystem wide block number
 	 * first block is the block number of the first block in this group
 	 */
-	group_first_block = ext2_group_first_block_no(sb, group);
+	group_first_block = ext2_group_first_block_no(sb, group);//该组块的第一个块号
 	group_last_block = group_first_block + (EXT2_BLOCKS_PER_GROUP(sb) - 1);
 
 	/*
@@ -1076,8 +1076,8 @@ ext2_try_to_allocate_with_rsv(struct super_block *sb, unsigned int group,
 	 * then we could go to allocate from the reservation window directly.
 	 */
 	while (1) {
-		if (rsv_is_empty(&my_rsv->rsv_window) || (ret < 0) ||
-			!goal_in_my_reservation(&my_rsv->rsv_window,
+		if (rsv_is_empty(&my_rsv->rsv_window)/* 预留窗口空*/ || (ret < 0) ||
+			!goal_in_my_reservation(&my_rsv->rsv_window,//预期目标块不在当前预留窗口颞部
 						grp_goal, group, sb)) {
 			if (my_rsv->rsv_goal_size < *count)
 				my_rsv->rsv_goal_size = *count;
@@ -1091,11 +1091,11 @@ ext2_try_to_allocate_with_rsv(struct super_block *sb, unsigned int group,
 				grp_goal = -1;
 		} else if (grp_goal >= 0) {
 			int curr = my_rsv->rsv_end -
-					(grp_goal + group_first_block) + 1;
+					(grp_goal + group_first_block) + 1;//当前预留窗口可提供分配的块数
 
 			if (curr < *count)
 				try_to_extend_reservation(my_rsv, sb,
-							*count - curr);
+							*count - curr);//块数不够的话，扩充预留区域
 		}
 
 		if ((my_rsv->rsv_start > group_last_block) ||
@@ -1104,7 +1104,7 @@ ext2_try_to_allocate_with_rsv(struct super_block *sb, unsigned int group,
 			BUG();
 		}
 		ret = ext2_try_to_allocate(sb, group, bitmap_bh, grp_goal,
-					   &num, &my_rsv->rsv_window);
+					   &num, &my_rsv->rsv_window);//将分配请求连同预留窗口传递给该函数
 		if (ret >= 0) {
 			my_rsv->rsv_alloc_hit += num;
 			*count = num;
@@ -1226,7 +1226,7 @@ retry_alloc:
 
 	free_blocks = le16_to_cpu(gdp->bg_free_blocks_count);
 	/*
-	 * if there is not enough free blocks to make a new resevation
+	 * if there is not enough free blocks to make a new resevation  <--哈哈，这个单词写错了
 	 * turn off reservation for this allocation
 	 */
 	if (my_rsv && (free_blocks < windowsz)
@@ -1241,7 +1241,7 @@ retry_alloc:
 			goto io_error;
 		grp_alloc_blk = ext2_try_to_allocate_with_rsv(sb, group_no,
 					bitmap_bh, grp_target_blk,
-					my_rsv, &num);
+					my_rsv, &num);//实际分配所需数据块
 		if (grp_alloc_blk >= 0)
 			goto allocated;
 	}

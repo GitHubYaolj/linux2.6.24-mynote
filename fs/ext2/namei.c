@@ -233,7 +233,7 @@ static int ext2_mkdir(struct inode * dir, struct dentry * dentry, int mode)
 	if (err)
 		goto out_fail;
 
-	err = ext2_add_link(dentry, inode);
+	err = ext2_add_link(dentry, inode);//将新创建目录添加到父目录的数据块中
 	if (err)
 		goto out_fail;
 
@@ -257,7 +257,7 @@ static int ext2_unlink(struct inode * dir, struct dentry *dentry)
 	struct page * page;
 	int err = -ENOENT;
 
-	de = ext2_find_entry (dir, dentry, &page);
+	de = ext2_find_entry (dir, dentry, &page);//dentry为要查找的目录项， dir为该目录项所在的目录， page为dir的数据内容即目录项表
 	if (!de)
 		goto out;
 
@@ -277,7 +277,7 @@ static int ext2_rmdir (struct inode * dir, struct dentry *dentry)
 	struct inode * inode = dentry->d_inode;
 	int err = -ENOTEMPTY;
 
-	if (ext2_empty_dir(inode)) {
+	if (ext2_empty_dir(inode)) {//检查该目录的数据块是否只剩 .和..  即是空的目录吗
 		err = ext2_unlink(dir, dentry);
 		if (!err) {
 			inode->i_size = 0;

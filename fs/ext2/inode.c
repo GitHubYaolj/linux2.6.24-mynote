@@ -591,7 +591,7 @@ static int ext2_get_blocks(struct inode *inode,
 	int count = 0;
 	ext2_fsblk_t first_block = 0;
 
-	depth = ext2_block_to_path(inode,iblock,offsets,&blocks_to_boundary);
+	depth = ext2_block_to_path(inode,iblock,offsets,&blocks_to_boundary);//根据文件内的位置，找到通向块的路径
 
 	if (depth == 0)
 		return (err);

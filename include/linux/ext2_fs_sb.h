@@ -37,7 +37,7 @@ struct ext2_reserve_window {
 
 struct ext2_reserve_window_node {
 	struct rb_node	 	rsv_node;
-	__u32			rsv_goal_size;
+	__u32			rsv_goal_size;//预留窗口的预期长度
 	__u32			rsv_alloc_hit;
 	struct ext2_reserve_window	rsv_window;
 };
@@ -51,7 +51,7 @@ struct ext2_block_alloc_info {
 	 * most-recently-allocated block in this file.
 	 * We use this for detecting linearly ascending allocation requests.
 	 */
-	__u32			last_alloc_logical_block;
+	__u32			last_alloc_logical_block;//上次分配的块在文件中的相对块号
 	/*
 	 * Was i_next_alloc_goal in ext2_inode_info
 	 * is the *physical* companion to i_next_alloc_block.
@@ -59,7 +59,7 @@ struct ext2_block_alloc_info {
 	 * allocated to this file.  This give us the goal (target) for the next
 	 * allocation when we detect linearly ascending requests.
 	 */
-	ext2_fsblk_t		last_alloc_physical_block;
+	ext2_fsblk_t		last_alloc_physical_block;//上次分配的块在块设备上的物理块号
 };
 
 #define rsv_start rsv_window._rsv_start
@@ -79,8 +79,8 @@ struct ext2_sb_info {
 	unsigned long s_gdb_count;	/* Number of group descriptor blocks */
 	unsigned long s_desc_per_block;	/* Number of group descriptors per block */
 	unsigned long s_groups_count;	/* Number of groups in the fs */
-	unsigned long s_overhead_last;  /* Last calculated overhead */
-	unsigned long s_blocks_last;    /* Last seen block count */
+	unsigned long s_overhead_last;  /* Last calculated overhead  管理数据的块数 */
+	unsigned long s_blocks_last;    /* Last seen block count  可用的块数 */
 	struct buffer_head * s_sbh;	/* Buffer containing the super block */
 	struct ext2_super_block * s_es;	/* Pointer to the super block in the buffer */
 	struct buffer_head ** s_group_desc;
@@ -96,7 +96,7 @@ struct ext2_sb_info {
 	int s_first_ino;
 	spinlock_t s_next_gen_lock;
 	u32 s_next_generation;
-	unsigned long s_dir_count;
+	unsigned long s_dir_count;//目录的总数
 	u8 *s_debts;
 	struct percpu_counter s_freeblocks_counter;
 	struct percpu_counter s_freeinodes_counter;

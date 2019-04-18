@@ -604,7 +604,7 @@ static int ext2_setup_super (struct super_block * sb,
 	if (!le16_to_cpu(es->s_max_mnt_count))
 		es->s_max_mnt_count = cpu_to_le16(EXT2_DFL_MAX_MNT_COUNT);
 	es->s_mnt_count=cpu_to_le16(le16_to_cpu(es->s_mnt_count) + 1);
-	ext2_write_super(sb);
+	ext2_write_super(sb);//将超级块的内容回写到底层。装载操作会修改超级块的某些值(如装载计数和上一次装载的日期)
 	if (test_opt (sb, DEBUG))
 		printk ("[EXT II FS %s, %s, bs=%lu, fs=%lu, gc=%lu, "
 			"bpg=%lu, ipg=%lu, mo=%04lx]\n",
@@ -827,7 +827,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 	 * previously didn't change the revision level when setting the flags,
 	 * so there is a chance incompat flags are set on a rev 0 filesystem.
 	 */
-	features = EXT2_HAS_INCOMPAT_FEATURE(sb, ~EXT2_FEATURE_INCOMPAT_SUPP);
+	features = EXT2_HAS_INCOMPAT_FEATURE(sb, ~EXT2_FEATURE_INCOMPAT_SUPP);//不兼容特性
 	if (features) {
 		printk("EXT2-fs: %s: couldn't mount because of "
 		       "unsupported optional features (%x).\n",
@@ -835,7 +835,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 		goto failed_mount;
 	}
 	if (!(sb->s_flags & MS_RDONLY) &&
-	    (features = EXT2_HAS_RO_COMPAT_FEATURE(sb, ~EXT2_FEATURE_RO_COMPAT_SUPP))){
+	    (features = EXT2_HAS_RO_COMPAT_FEATURE(sb, ~EXT2_FEATURE_RO_COMPAT_SUPP))){//只读兼容特性
 		printk("EXT2-fs: %s: couldn't mount RDWR because of "
 		       "unsupported optional features (%x).\n",
 		       sb->s_id, le32_to_cpu(features));
@@ -971,7 +971,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 	}
 	for (i = 0; i < db_count; i++) {
 		block = descriptor_loc(sb, logic_sb_block, i);
-		sbi->s_group_desc[i] = sb_bread(sb, block);
+		sbi->s_group_desc[i] = sb_bread(sb, block);//逐行读取组描述符
 		if (!sbi->s_group_desc[i]) {
 			for (j = 0; j < i; j++)
 				brelse (sbi->s_group_desc[j]);
@@ -979,7 +979,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 			goto failed_mount_group_desc;
 		}
 	}
-	if (!ext2_check_descriptors (sb)) {
+	if (!ext2_check_descriptors (sb)) {//检查一致性
 		printk ("EXT2-fs: group descriptors corrupted!\n");
 		goto failed_mount2;
 	}

@@ -1019,7 +1019,7 @@ struct super_block {
 
 	char s_id[32];				/* Informational name */
 
-	void 			*s_fs_info;	/* Filesystem private info */
+	void 			*s_fs_info;	/* Filesystem private info 特定于文件系统的信息，ext2的ext2_sb_info*/
 
 	/*
 	 * The next field is for VFS *only*. No filesystems have any business

@@ -34,7 +34,7 @@ struct ext2_inode_info {
 	__u32	i_block_group;
 
 	/* block reservation info */
-	struct ext2_block_alloc_info *i_block_alloc_info;
+	struct ext2_block_alloc_info *i_block_alloc_info;//Ô¤·ÖÅä
 
 	__u32	i_dir_start_lookup;
 #ifdef CONFIG_EXT2_FS_XATTR
