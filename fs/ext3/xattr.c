@@ -226,7 +226,7 @@ ext3_xattr_block_get(struct inode *inode, int name_index, const char *name,
 	if (!EXT3_I(inode)->i_file_acl)
 		goto cleanup;
 	ea_idebug(inode, "reading block %u", EXT3_I(inode)->i_file_acl);
-	bh = sb_bread(inode->i_sb, EXT3_I(inode)->i_file_acl);
+	bh = sb_bread(inode->i_sb, EXT3_I(inode)->i_file_acl);//读取i_file_acl指向的块
 	if (!bh)
 		goto cleanup;
 	ea_bdebug(bh, "b_count=%d, refcount=%d",
@@ -321,10 +321,10 @@ ext3_xattr_get(struct inode *inode, int name_index, const char *name,
 
 	down_read(&EXT3_I(inode)->xattr_sem);
 	error = ext3_xattr_ibody_get(inode, name_index, name, buffer,
-				     buffer_size);
+				     buffer_size);//试图在inode的空闲空间中找到所需的属性
 	if (error == -ENODATA)
 		error = ext3_xattr_block_get(inode, name_index, name, buffer,
-					     buffer_size);
+					     buffer_size);//从外部的属性数据块中读取属性值
 	up_read(&EXT3_I(inode)->xattr_sem);
 	return error;
 }
@@ -969,11 +969,11 @@ ext3_xattr_set_handle(handle_t *handle, struct inode *inode, int name_index,
 		EXT3_I(inode)->i_state &= ~EXT3_STATE_NEW;
 	}
 
-	error = ext3_xattr_ibody_find(inode, &i, &is);
+	error = ext3_xattr_ibody_find(inode, &i, &is);//查找扩展属性的数据
 	if (error)
 		goto cleanup;
 	if (is.s.not_found)
-		error = ext3_xattr_block_find(inode, &i, &bs);
+		error = ext3_xattr_block_find(inode, &i, &bs);//在inode外部的数据块中查找属性
 	if (error)
 		goto cleanup;
 	if (is.s.not_found && bs.s.not_found) {

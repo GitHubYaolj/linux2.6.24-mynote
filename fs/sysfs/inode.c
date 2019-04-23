@@ -154,7 +154,7 @@ static void sysfs_init_inode(struct sysfs_dirent *sd, struct inode *inode)
 	inode->i_ino = sd->s_ino;
 	lockdep_set_class(&inode->i_mutex, &sysfs_inode_imutex_key);
 
-	if (sd->s_iattr) {
+	if (sd->s_iattr) {//指定了非标准的属性?
 		/* sysfs_dirent has non-default attributes
 		 * get them for the new inode from persistent copy
 		 * in sysfs_dirent

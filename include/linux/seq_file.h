@@ -13,11 +13,11 @@ struct dentry;
 struct inode;
 
 struct seq_file {
-	char *buf;
-	size_t size;
+	char *buf;//传输给用户层的数据
+	size_t size;//总字节数
 	size_t from;
-	size_t count;
-	loff_t index;
+	size_t count;//需要传输到用户层的剩余字节数
+	loff_t index;//内核向缓冲区增加数据的写入位置
 	u64 version;
 	struct mutex lock;
 	const struct seq_operations *op;

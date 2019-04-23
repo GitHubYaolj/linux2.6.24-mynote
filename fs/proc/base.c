@@ -1182,7 +1182,7 @@ static struct inode *proc_pid_make_inode(struct super_block * sb, struct task_st
 
 	/* We need a new inode */
 
-	inode = new_inode(sb);
+	inode = new_inode(sb);//分配一个inode，其实分配了一个proc_inode
 	if (!inode)
 		goto out;
 
@@ -1757,13 +1757,13 @@ static struct dentry *proc_pident_lookup(struct inode *dir,
 	for (p = ents; p <= last; p++) {
 		if (p->len != dentry->d_name.len)
 			continue;
-		if (!memcmp(dentry->d_name.name, p->name, p->len))
+		if (!memcmp(dentry->d_name.name, p->name, p->len))//检查目录文件名是否在tgid_base_stuff中
 			break;
 	}
 	if (p > last)
 		goto out;
 
-	error = proc_pident_instantiate(dir, dentry, task, p);
+	error = proc_pident_instantiate(dir, dentry, task, p);//生成新的inode
 out:
 	put_task_struct(task);
 out_no_task:
@@ -2141,7 +2141,7 @@ static struct dentry *proc_base_lookup(struct inode *dir, struct dentry *dentry)
 	for (p = proc_base_stuff; p <= last; p++) {
 		if (p->len != dentry->d_name.len)
 			continue;
-		if (!memcmp(dentry->d_name.name, p->name, p->len))
+		if (!memcmp(dentry->d_name.name, p->name, p->len))//名字是不是self
 			break;
 	}
 	if (p > last)
@@ -2408,13 +2408,13 @@ struct dentry *proc_pid_lookup(struct inode *dir, struct dentry * dentry, struct
 	if (!IS_ERR(result) || PTR_ERR(result) != -ENOENT)
 		goto out;
 
-	tgid = name_to_int(dentry);
+	tgid = name_to_int(dentry);//将由数字组成的字符串转成整数
 	if (tgid == ~0U)
 		goto out;
 
 	ns = dentry->d_sb->s_fs_info;
 	rcu_read_lock();
-	task = find_task_by_pid_ns(tgid, ns);
+	task = find_task_by_pid_ns(tgid, ns);//查找目标进程的task_struct
 	if (task)
 		get_task_struct(task);
 	rcu_read_unlock();

@@ -455,7 +455,7 @@ int proc_fill_super(struct super_block *s)
 	s->s_time_gran = 1;
 	
 	de_get(&proc_root);
-	root_inode = proc_get_inode(s, PROC_ROOT_INO, &proc_root);
+	root_inode = proc_get_inode(s, PROC_ROOT_INO, &proc_root);//为proc根目录创建一个inode
 	if (!root_inode)
 		goto out_no_root;
 	root_inode->i_uid = 0;

@@ -74,7 +74,7 @@ proc_file_read(struct file *file, char __user *buf, size_t nbytes,
 		nbytes = MAX_NON_LFS - pos;
 
 	dp = PDE(inode);
-	if (!(page = (char*) __get_free_page(GFP_TEMPORARY)))
+	if (!(page = (char*) __get_free_page(GFP_TEMPORARY)))//分配一个内存页面
 		return -ENOMEM;
 
 	while ((nbytes > 0) && !eof) {
@@ -528,21 +528,21 @@ static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp
 {
 	unsigned int i;
 	
-	i = get_inode_number();
+	i = get_inode_number();//生成一个唯一的proc内部编号，向数据项赋予身份。类似inode号
 	if (i == 0)
 		return -EAGAIN;
 	dp->low_ino = i;
 
-	if (S_ISDIR(dp->mode)) {
+	if (S_ISDIR(dp->mode)) {//目录
 		if (dp->proc_iops == NULL) {
 			dp->proc_fops = &proc_dir_operations;
 			dp->proc_iops = &proc_dir_inode_operations;
 		}
 		dir->nlink++;
-	} else if (S_ISLNK(dp->mode)) {
+	} else if (S_ISLNK(dp->mode)) {//链接
 		if (dp->proc_iops == NULL)
 			dp->proc_iops = &proc_link_inode_operations;
-	} else if (S_ISREG(dp->mode)) {
+	} else if (S_ISREG(dp->mode)) {//常规文件
 		if (dp->proc_fops == NULL)
 			dp->proc_fops = &proc_file_operations;
 		if (dp->proc_iops == NULL)

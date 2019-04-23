@@ -707,7 +707,7 @@ void __init proc_misc_init(void)
 		{NULL,}
 	};
 	for (p = simple_ones; p->name; p++)
-		create_proc_read_entry(p->name, 0, NULL, p->read_proc, NULL);
+		create_proc_read_entry(p->name, 0, NULL, p->read_proc, NULL);//创建一个proc_dir_entry,指定read_proc函数
 
 	proc_symlink("mounts", NULL, "self/mounts");
 
@@ -720,7 +720,7 @@ void __init proc_misc_init(void)
 			entry->proc_fops = &proc_kmsg_operations;
 	}
 #endif
-	create_seq_entry("locks", 0, &proc_locks_operations);
+	create_seq_entry("locks", 0, &proc_locks_operations);//创建一个proc_dir_entry,指定proc_fops函数
 	create_seq_entry("devices", 0, &proc_devinfo_operations);
 	create_seq_entry("cpuinfo", 0, &proc_cpuinfo_operations);
 #ifdef CONFIG_BLOCK

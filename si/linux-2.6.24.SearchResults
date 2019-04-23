@@ -1,20 +1,37 @@
----- inode_hashtable Matches (13 in 1 files) ----
-Inode.c (fs):static struct hlist_head *inode_hashtable __read_mostly;
-Inode.c (fs):		head = inode_hashtable + hash(sb, res);
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, ino);
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(sb, ino);
-Inode.c (fs): *		inode_hashtable.
-Inode.c (fs):	struct hlist_head *head = inode_hashtable + hash(inode->i_sb, hashval);
-Inode.c (fs):	inode_hashtable =
-Inode.c (fs):		INIT_HLIST_HEAD(&inode_hashtable[loop]);
-Inode.c (fs):	inode_hashtable =
-Inode.c (fs):		INIT_HLIST_HEAD(&inode_hashtable[loop]);
----- inode_hashtable Search Errors Encountered (4) ----
-The following 4 files could not be processed:
-E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\kernel\cgroup.c : File could not be opened.
-E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\asm-arm\arch-ixp4xx\ixp4xx-regs.h : File could not be opened.
-E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\linux\msdos_fs.h : File could not be opened.
-E:\´ò¸¨Öú\tq2440\practise\linux-2.6.24\include\linux\neighbour.h : File could not be opened.
+---- sysfs_ops Matches (39 in 13 files) ----
+Bus.c (drivers\base):static struct sysfs_ops driver_sysfs_ops = {
+Bus.c (drivers\base):	.sysfs_ops	= &driver_sysfs_ops,
+Bus.c (drivers\base):static struct sysfs_ops bus_sysfs_ops = {
+Bus.c (drivers\base):	.sysfs_ops	= &bus_sysfs_ops,
+Class.c (drivers\base):static struct sysfs_ops class_sysfs_ops = {
+Class.c (drivers\base):	.sysfs_ops	= &class_sysfs_ops,
+Class.c (drivers\base):static struct sysfs_ops class_dev_sysfs_ops = {
+Class.c (drivers\base):	.sysfs_ops	= &class_dev_sysfs_ops,
+Core.c (drivers\base):static struct sysfs_ops dev_sysfs_ops = {
+Core.c (drivers\base):	.sysfs_ops	= &dev_sysfs_ops,
+File.c (fs\sysfs):static struct sysfs_ops subsys_sysfs_ops = {
+File.c (fs\sysfs):	struct sysfs_ops	* ops;
+File.c (fs\sysfs):	struct sysfs_ops * ops = buffer->ops;
+File.c (fs\sysfs):	struct sysfs_ops * ops = buffer->ops;
+File.c (fs\sysfs):	struct sysfs_ops * ops = NULL;
+File.c (fs\sysfs):		ops = kobj->kset->ktype->sysfs_ops;
+File.c (fs\sysfs):		ops = kobj->ktype->sysfs_ops;
+Genhd.c (block):static struct sysfs_ops disk_sysfs_ops = {
+Genhd.c (block):	.sysfs_ops	= &disk_sysfs_ops,
+Intel_cacheinfo.c (arch\x86\kernel\cpu):static struct sysfs_ops sysfs_ops = {
+Intel_cacheinfo.c (arch\x86\kernel\cpu):	.sysfs_ops	= &sysfs_ops,
+Intel_cacheinfo.c (arch\x86\kernel\cpu):	.sysfs_ops	= &sysfs_ops,
+Kobject.c (lib):	.sysfs_ops	= NULL,
+Kobject.h (include\linux):	struct sysfs_ops	* sysfs_ops;
+Ll_rw_blk.c (block):static struct sysfs_ops queue_sysfs_ops = {
+Ll_rw_blk.c (block):	.sysfs_ops	= &queue_sysfs_ops,
+Mount.c (fs\sysfs):static const struct super_operations sysfs_ops = {
+Mount.c (fs\sysfs):	sb->s_op = &sysfs_ops;
+Params.c (kernel):static struct sysfs_ops module_sysfs_ops = {
+Params.c (kernel):	.sysfs_ops =	&module_sysfs_ops,
+Params.c (kernel):static struct sysfs_ops module_sysfs_ops = {
+Sys.c (drivers\base):static struct sysfs_ops sysfs_ops = {
+Sys.c (drivers\base):	.sysfs_ops	= &sysfs_ops,
+Sys.c (drivers\base):static struct sysfs_ops sysfs_class_ops = {
+Sys.c (drivers\base):	.sysfs_ops	= &sysfs_class_ops,
+Sysfs.h (include\linux):struct sysfs_ops {

@@ -160,7 +160,8 @@ sysfs_read_file(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 
 	mutex_lock(&buffer->mutex);
 	if (buffer->needs_read_fill) {
-		retval = fill_read_buffer(file->f_path.dentry,buffer);
+		retval = fill_read_buffer(file->f_path.dentry,buffer);//buffer->ops->show,sysfs_open_file中注册了buffer->ops,sysfs_ops例如dev_sysfs_ops/driver_sysfs_ops/bus_sysfs_ops,这些结构体内的函数实现都非常类似
+		                                                        //最终show和store调用由DEVICE_ATTR/ BUS_ATTR/ DRIVER_ATTR创建的结构体内相应的函数，
 		if (retval)
 			goto out;
 	}
@@ -261,7 +262,7 @@ sysfs_write_file(struct file *file, const char __user *buf, size_t count, loff_t
 	mutex_lock(&buffer->mutex);
 	len = fill_write_buffer(buffer, buf, count);
 	if (len > 0)
-		len = flush_write_buffer(file->f_path.dentry, buffer, len);
+		len = flush_write_buffer(file->f_path.dentry, buffer, len);//buffer->ops->store
 	if (len > 0)
 		*ppos += len;
 	mutex_unlock(&buffer->mutex);

@@ -86,7 +86,7 @@ vfs_setxattr(struct dentry *dentry, char *name, void *value,
 	if (inode->i_op->setxattr) {
 		error = inode->i_op->setxattr(dentry, name, value, size, flags);
 		if (!error) {
-			fsnotify_xattr(dentry);
+			fsnotify_xattr(dentry);//将扩展属性的改变通知用户层
 			security_inode_post_setxattr(dentry, name, value,
 						     size, flags);
 		}
@@ -202,7 +202,7 @@ setxattr(struct dentry *d, char __user *name, void __user *value,
 	if (flags & ~(XATTR_CREATE|XATTR_REPLACE))
 		return -EINVAL;
 
-	error = strncpy_from_user(kname, name, sizeof(kname));
+	error = strncpy_from_user(kname, name, sizeof(kname));//将属性的名称和值从用户空间复制到内核空间
 	if (error == 0 || error == sizeof(kname))
 		error = -ERANGE;
 	if (error < 0)
@@ -227,7 +227,7 @@ setxattr(struct dentry *d, char __user *name, void __user *value,
 
 asmlinkage long
 sys_setxattr(char __user *path, char __user *name, void __user *value,
-	     size_t size, int flags)
+	     size_t size, int flags)//系统调用
 {
 	struct nameidata nd;
 	int error;

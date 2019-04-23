@@ -214,7 +214,7 @@ int get_sb_pseudo(struct file_system_type *fs_type, char *name,
 	if (IS_ERR(s))
 		return PTR_ERR(s);
 
-	s->s_flags = MS_NOUSER;
+	s->s_flags = MS_NOUSER;//确保不能从用户空间装载该文件系统
 	s->s_maxbytes = ~0ULL;
 	s->s_blocksize = 1024;
 	s->s_blocksize_bits = 10;

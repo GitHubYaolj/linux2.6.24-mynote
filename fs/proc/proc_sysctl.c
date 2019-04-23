@@ -147,12 +147,12 @@ static struct dentry *proc_sys_lookup(struct inode *dir, struct dentry *dentry,
 	struct ctl_table *table;
 
 	err = ERR_PTR(-ENOENT);
-	table = do_proc_sys_lookup(dentry->d_parent, &dentry->d_name, &head);
+	table = do_proc_sys_lookup(dentry->d_parent, &dentry->d_name, &head);//查找目标sysctl表现
 	if (!table)
 		goto out;
 
 	err = ERR_PTR(-ENOMEM);
-	inode = proc_sys_make_inode(dir, table);
+	inode = proc_sys_make_inode(dir, table);//构建新的inode
 	if (!inode)
 		goto out;
 

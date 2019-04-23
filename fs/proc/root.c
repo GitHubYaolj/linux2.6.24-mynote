@@ -106,27 +106,27 @@ static struct file_system_type proc_fs_type = {
 
 void __init proc_root_init(void)
 {
-	int err = proc_init_inodecache();
+	int err = proc_init_inodecache();//为proc_inode对象创建一个slab缓存
 	if (err)
 		return;
-	err = register_filesystem(&proc_fs_type);
+	err = register_filesystem(&proc_fs_type);//注册fs
 	if (err)
 		return;
-	proc_mnt = kern_mount_data(&proc_fs_type, &init_pid_ns);
+	proc_mnt = kern_mount_data(&proc_fs_type, &init_pid_ns);//mount fs
 	err = PTR_ERR(proc_mnt);
 	if (IS_ERR(proc_mnt)) {
 		unregister_filesystem(&proc_fs_type);
 		return;
 	}
 
-	proc_misc_init();
+	proc_misc_init();//创建proc主目录中的各种文件项
 
-	proc_net_init();
+	proc_net_init();//创建proc/net及目录下的各种文件项
 
 #ifdef CONFIG_SYSVIPC
 	proc_mkdir("sysvipc", NULL);
 #endif
-	proc_root_fs = proc_mkdir("fs", NULL);
+	proc_root_fs = proc_mkdir("fs", NULL);//创建/proc下的子目录，新建的子目录为空，以后再添加文件
 	proc_root_driver = proc_mkdir("driver", NULL);
 	proc_mkdir("fs/nfsd", NULL); /* somewhere for the nfsd filesystem to be mounted */
 #if defined(CONFIG_SUN_OPENPROMFS) || defined(CONFIG_SUN_OPENPROMFS_MODULE)
@@ -138,7 +138,7 @@ void __init proc_root_init(void)
 	proc_device_tree_init();
 #endif
 	proc_bus = proc_mkdir("bus", NULL);
-	proc_sys_init();
+	proc_sys_init();//创建/proc/sys目录
 }
 
 static int proc_root_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat
