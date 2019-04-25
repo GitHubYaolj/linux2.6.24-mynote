@@ -12,7 +12,7 @@
 struct user_namespace {
 	struct kref		kref;
 	struct hlist_head	uidhash_table[UIDHASH_SZ];
-	struct user_struct	*root_user;
+	struct user_struct	*root_user;//命名空间中的每个用户，都有一个user_struct实例，负责记录其资源消耗，各个实例可通过散列表uidhash_table访问
 };
 
 extern struct user_namespace init_user_ns;

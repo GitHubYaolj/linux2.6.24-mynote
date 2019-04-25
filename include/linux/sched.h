@@ -442,14 +442,14 @@ struct signal_struct {
 
 	union {
 		pid_t pgrp __deprecated;
-		pid_t __pgrp;
+		pid_t __pgrp;//进程组ID
 	};
 
 	struct pid *tty_old_pgrp;
 
 	union {
 		pid_t session __deprecated;
-		pid_t __session;
+		pid_t __session;//会话ID
 	};
 
 	/* boolean value for session group leader */
@@ -931,8 +931,8 @@ struct task_struct {
 
 	int prio, static_prio, normal_prio;
 	struct list_head run_list;
-	const struct sched_class *sched_class;
-	struct sched_entity se;
+	const struct sched_class *sched_class;//调度器类
+	struct sched_entity se;//可调度实体
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 	/* list of struct preempt_notifier: */
@@ -954,7 +954,7 @@ struct task_struct {
 	unsigned int btrace_seq;
 #endif
 
-	unsigned int policy;
+	unsigned int policy;//调度策略 SCHED_NORMAL SCHED_BATCH SCHED_IDLE (完全公平调度器类)   SCHED_RR SCHED_FIFO(实时调度器类)
 	cpumask_t cpus_allowed;
 	unsigned int time_slice;
 
@@ -980,9 +980,9 @@ struct task_struct {
 	/* ??? */
 	unsigned int personality;
 	unsigned did_exec:1;
-	pid_t pid;
-	pid_t tgid;
-
+	pid_t pid;//全局ID
+	pid_t tgid;//线程组ID，如果没有使用线程，tgid == pid
+                    //会话ID在task_struct->signal->__session中；进程组ID在task_struct->signal->__pgrp中
 #ifdef CONFIG_CC_STACKPROTECTOR
 	/* Canary value for the -fstack-protector gcc feature */
 	unsigned long stack_canary;
@@ -1000,7 +1000,7 @@ struct task_struct {
 	 */
 	struct list_head children;	/* list of my children */
 	struct list_head sibling;	/* linkage in my parent's children list */
-	struct task_struct *group_leader;	/* threadgroup leader */
+	struct task_struct *group_leader;	/* threadgroup leader 线程的话会用到，指向创建该线程的task_struct，即线程组长  */
 
 	/* PID/PID hash table linkage. */
 	struct pid_link pids[PIDTYPE_MAX];

@@ -18,7 +18,7 @@ struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];
 	int last_pid;
-	struct task_struct *child_reaper;
+	struct task_struct *child_reaper;//每个PID命名空间都有一个进程，作用相当于全局的init进程，对孤儿进程调用wait4
 	struct kmem_cache *pid_cachep;
 	int level;
 	struct pid_namespace *parent;

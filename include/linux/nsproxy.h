@@ -23,11 +23,11 @@ struct pid_namespace;
  */
 struct nsproxy {
 	atomic_t count;
-	struct uts_namespace *uts_ns;
-	struct ipc_namespace *ipc_ns;
-	struct mnt_namespace *mnt_ns;
+	struct uts_namespace *uts_ns;//unix timesharing system 运行内核的名称、版本、底层体系结构类型
+	struct ipc_namespace *ipc_ns;//进程间通信有关的信息，msg shm
+	struct mnt_namespace *mnt_ns;//已经装载的文件系统视图
 	struct pid_namespace *pid_ns;
-	struct user_namespace *user_ns;
+	struct user_namespace *user_ns;//用于限定每个用户资源使用的信息
 	struct net 	     *net_ns;
 };
 extern struct nsproxy init_nsproxy;

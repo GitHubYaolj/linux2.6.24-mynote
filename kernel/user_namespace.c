@@ -42,14 +42,14 @@ static struct user_namespace *clone_user_ns(struct user_namespace *old_ns)
 		INIT_HLIST_HEAD(ns->uidhash_table + n);
 
 	/* Insert new root user.  */
-	ns->root_user = alloc_uid(ns, 0);
+	ns->root_user = alloc_uid(ns, 0);//root用户的user_struct，
 	if (!ns->root_user) {
 		kfree(ns);
 		return ERR_PTR(-ENOMEM);
 	}
 
 	/* Reset current->user with a new one */
-	new_user = alloc_uid(ns, current->uid);
+	new_user = alloc_uid(ns, current->uid);//新用户
 	if (!new_user) {
 		free_uid(ns->root_user);
 		kfree(ns);
