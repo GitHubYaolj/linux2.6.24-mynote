@@ -2149,6 +2149,18 @@ out_nomap:
  * We enter with non-exclusive mmap_sem (to exclude vma changes,
  * but allow concurrent faults), and pte mapped but not yet locked.
  * We return with mmap_sem still held, but pte unmapped and unlocked.
+ 匿名映射体现了linux为进程分配物理空间的基本态度，不到实在不行的时候不分配物理页，
+ 当使用malloc/mmap申请映射一段物理空间时，内核只是给该进程创建了段线性区vma，
+ 但并未映射物理页，然后如果试图去读这段申请的进程空间，
+ 由于未创建相应的二级页表映射条目，MMU会发出缺页异常，
+ 而这时内核依然只是把一个默认的零页zero_pfn(这是在初始化时创建的，前面的内存页表的文章描述过)给vma映射过去，
+ 当应用程序又试图写这段申请的物理空间时，这就是实在不行的时候了，内核才会给vma映射物理页
+ 
+ ps: 这一版本并没这样实现，即使是读，也直接分配了地址，没有如上说的只映射一个默认的zero_pfn
+ 没有如https://www.cnblogs.com/jikexianfeng/articles/5647994.html中记录
+  if (!(flags & FAULT_FLAG_WRITE)) {
+                   entry = pte_mkspecial(pfn_pte(my_zero_pfn(address),
+                                                        vma->vm_page_prot));
  */
 static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 		unsigned long address, pte_t *page_table, pmd_t *pmd,
@@ -2477,13 +2489,17 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	    //分如下三种情况
 		if (pte_none(entry)) {//1. 没有对应的页表项,pte尚未写入任何物理地址，即还根本没有分配物理页
 			if (vma->vm_ops) {
-				if (vma->vm_ops->fault || vma->vm_ops->nopage)
+				if (vma->vm_ops->fault || vma->vm_ops->nopage)//如果该vma的操作函数集合实现了fault函数，说明是文件映射而不是匿名映射，将调用do_linear_fault分配物理页
+                                                                    				/*struct vm_operations_struct generic_file_vm_ops = {
+                                                                                    	.fault		= filemap_fault,
+                                                                                    };*/
 					return do_linear_fault(mm, vma, address,
 						pte, pmd, write_access, entry);//按需分配(匿名映射)
 				if (unlikely(vma->vm_ops->nopfn))
 					return do_no_pfn(mm, vma, address, pte,
 							 pmd, write_access);
 			}
+            //匿名映射的情况分配物理页，如malloc,最终调用alloc_pages
 			return do_anonymous_page(mm, vma, address,
 						 pte, pmd, write_access);
 		}
@@ -2493,6 +2509,16 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 		return do_swap_page(mm, vma, address,
 					pte, pmd, write_access, entry);//3. 页不在物理内存中，页表中保存了相关的信息，意味着该页被换出，需从交换区换入
 	}
+    
+    /*写时复制
+    
+        COW的场合就是访问映射的页不可写，有两种情况、：
+    
+    一种是之前给vma映射的是零页(zero_pfn)，
+    
+        另外一种是访问fork得到的进程空间(子进程与父进程共享父进程的只读页)
+    
+        共同特点就是: 二级页表条目不允许写，简单说就是该页不可写*/
 
 	ptl = pte_lockptr(mm, pmd);
 	spin_lock(ptl);

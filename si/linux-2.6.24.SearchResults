@@ -1,37 +1,9 @@
----- sysfs_ops Matches (39 in 13 files) ----
-Bus.c (drivers\base):static struct sysfs_ops driver_sysfs_ops = {
-Bus.c (drivers\base):	.sysfs_ops	= &driver_sysfs_ops,
-Bus.c (drivers\base):static struct sysfs_ops bus_sysfs_ops = {
-Bus.c (drivers\base):	.sysfs_ops	= &bus_sysfs_ops,
-Class.c (drivers\base):static struct sysfs_ops class_sysfs_ops = {
-Class.c (drivers\base):	.sysfs_ops	= &class_sysfs_ops,
-Class.c (drivers\base):static struct sysfs_ops class_dev_sysfs_ops = {
-Class.c (drivers\base):	.sysfs_ops	= &class_dev_sysfs_ops,
-Core.c (drivers\base):static struct sysfs_ops dev_sysfs_ops = {
-Core.c (drivers\base):	.sysfs_ops	= &dev_sysfs_ops,
-File.c (fs\sysfs):static struct sysfs_ops subsys_sysfs_ops = {
-File.c (fs\sysfs):	struct sysfs_ops	* ops;
-File.c (fs\sysfs):	struct sysfs_ops * ops = buffer->ops;
-File.c (fs\sysfs):	struct sysfs_ops * ops = buffer->ops;
-File.c (fs\sysfs):	struct sysfs_ops * ops = NULL;
-File.c (fs\sysfs):		ops = kobj->kset->ktype->sysfs_ops;
-File.c (fs\sysfs):		ops = kobj->ktype->sysfs_ops;
-Genhd.c (block):static struct sysfs_ops disk_sysfs_ops = {
-Genhd.c (block):	.sysfs_ops	= &disk_sysfs_ops,
-Intel_cacheinfo.c (arch\x86\kernel\cpu):static struct sysfs_ops sysfs_ops = {
-Intel_cacheinfo.c (arch\x86\kernel\cpu):	.sysfs_ops	= &sysfs_ops,
-Intel_cacheinfo.c (arch\x86\kernel\cpu):	.sysfs_ops	= &sysfs_ops,
-Kobject.c (lib):	.sysfs_ops	= NULL,
-Kobject.h (include\linux):	struct sysfs_ops	* sysfs_ops;
-Ll_rw_blk.c (block):static struct sysfs_ops queue_sysfs_ops = {
-Ll_rw_blk.c (block):	.sysfs_ops	= &queue_sysfs_ops,
-Mount.c (fs\sysfs):static const struct super_operations sysfs_ops = {
-Mount.c (fs\sysfs):	sb->s_op = &sysfs_ops;
-Params.c (kernel):static struct sysfs_ops module_sysfs_ops = {
-Params.c (kernel):	.sysfs_ops =	&module_sysfs_ops,
-Params.c (kernel):static struct sysfs_ops module_sysfs_ops = {
-Sys.c (drivers\base):static struct sysfs_ops sysfs_ops = {
-Sys.c (drivers\base):	.sysfs_ops	= &sysfs_ops,
-Sys.c (drivers\base):static struct sysfs_ops sysfs_class_ops = {
-Sys.c (drivers\base):	.sysfs_ops	= &sysfs_class_ops,
-Sysfs.h (include\linux):struct sysfs_ops {
+---- ext2_aops Matches (8 in 3 files) ----
+Ext2.h (fs\ext2):extern const struct address_space_operations ext2_aops;
+Inode.c (fs\ext2):const struct address_space_operations ext2_aops = {
+Inode.c (fs\ext2):			inode->i_mapping->a_ops = &ext2_aops;
+Inode.c (fs\ext2):			inode->i_mapping->a_ops = &ext2_aops;
+Inode.c (fs\ext2):				inode->i_mapping->a_ops = &ext2_aops;
+Namei.c (fs\ext2):			inode->i_mapping->a_ops = &ext2_aops;
+Namei.c (fs\ext2):			inode->i_mapping->a_ops = &ext2_aops;
+Namei.c (fs\ext2):		inode->i_mapping->a_ops = &ext2_aops;

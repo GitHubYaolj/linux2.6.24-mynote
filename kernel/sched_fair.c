@@ -871,7 +871,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p)
 		gran = calc_delta_fair(gran, &se->load);//转换为虚拟时间
 
 	if (pse->vruntime + gran < se->vruntime)
-		resched_task(curr);
+		resched_task(curr);//设置TIF_NEED_RESCHED
 }
 
 static struct task_struct *pick_next_task_fair(struct rq *rq)

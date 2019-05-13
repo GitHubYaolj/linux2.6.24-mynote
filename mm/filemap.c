@@ -1405,7 +1405,7 @@ no_cached_page:
 	 * We're only likely to ever get here if MADV_RANDOM is in
 	 * effect.
 	 */
-	error = page_cache_read(file, vmf->pgoff);
+	error = page_cache_read(file, vmf->pgoff);//在这里分配 page , page = page_cache_alloc_cold(mapping);
 
 	/*
 	 * The page we want has now been added to the page cache.

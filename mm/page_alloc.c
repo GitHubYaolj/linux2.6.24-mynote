@@ -1525,7 +1525,7 @@ restart:
 	 * Ignore cpuset if GFP_ATOMIC (!wait) rather than fail alloc.
 	 * See also cpuset_zone_allowed() comment in kernel/cpuset.c.
 	 */
-	page = get_page_from_freelist(gfp_mask, order, zonelist, alloc_flags);
+	page = get_page_from_freelist(gfp_mask, order, zonelist, alloc_flags);// ALLOC_WMARK_MIN
 	if (page)
 		goto got_pg;
 
@@ -2079,7 +2079,7 @@ static void build_zonelists_in_node_order(pg_data_t *pgdat, int node)
 		zonelist = pgdat->node_zonelists + i;
 		for (j = 0; zonelist->zones[j] != NULL; j++)
 			;
- 		j = build_zonelists_node(NODE_DATA(node), zonelist, j, i);
+ 		j = build_zonelists_node(NODE_DATA(node), zonelist, j, i);//½¨Á¢ fallback zone lists
 		zonelist->zones[j] = NULL;
 	}
 }

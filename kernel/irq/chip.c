@@ -335,8 +335,10 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
 	irqreturn_t action_ret;
 
 	spin_lock(&desc->lock);
-	mask_ack_irq(desc, irq);
-
+	mask_ack_irq(desc, irq);//屏蔽并清除该中断， 这里是电平触发，一开始就清除了，再次开中断不是会马上再次触发吗????(屏蔽了该中断，即使信号过来也不触发中断，但unmask后会再次触发吗?????) -->查资料如下
+	                            //在电平触发方式下，当外部引脚的低电平在中断服务返回前没有被拉高时（即撤除中断请求状态），会引起反复的不需要的中断，造成程序执行的错误。
+	                            //这类中断方式下，需要在中断服务程序中设置指令，清除外部中断的低电平状态，使之变为高电平。
+                                    //https://blog.csdn.net/walkingman321/article/details/6261969
 	if (unlikely(desc->status & IRQ_INPROGRESS))
 		goto out_unlock;
 	desc->status &= ~(IRQ_REPLAY | IRQ_WAITING);
@@ -458,7 +460,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
 	kstat_cpu(cpu).irqs[irq]++;
 
 	/* Start handling the irq */
-	desc->chip->ack(irq);
+	desc->chip->ack(irq);//清除中断
 
 	/* Mark the IRQ currently in progress.*/
 	desc->status |= IRQ_INPROGRESS;

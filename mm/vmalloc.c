@@ -518,7 +518,7 @@ EXPORT_SYMBOL(__vmalloc);
  *	For tight control over page level allocator and protection flags
  *	use __vmalloc() instead.
  */
-void *vmalloc(unsigned long size)
+void *vmalloc(unsigned long size)//以页为单位，在高端内存进行分配，所以虚拟地址是连续的，物理地址不连续，而单页内物理地址是连续的，
 {
 	return __vmalloc(size, GFP_KERNEL | __GFP_HIGHMEM, PAGE_KERNEL);
 }

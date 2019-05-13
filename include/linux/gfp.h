@@ -186,7 +186,7 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 		nid = numa_node_id();
 
 	return __alloc_pages(gfp_mask, order,
-		NODE_DATA(nid)->node_zonelists + gfp_zone(gfp_mask));
+		NODE_DATA(nid)->node_zonelists + gfp_zone(gfp_mask));//NODE_DATA(nid)Îª pglist_data ÀàĞÍ
 }
 
 #ifdef CONFIG_NUMA
